@@ -189,6 +189,7 @@ def Train(opt):
 if __name__ == '__main__':
     opt = opts.parse();
     opt.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu");
+    print(opt.device)
     valid_training_type = False;
     while not valid_training_type:
         train_type = input('Enter an option: \n1. Re-Training\n2. Training from Scratch\n:');
