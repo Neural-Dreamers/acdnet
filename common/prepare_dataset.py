@@ -19,7 +19,7 @@ def main():
     mainDir = os.getcwd();
     esc50_path = os.path.join(mainDir, 'datasets\\esc50');
 
-    if not os.path.exists:
+    if not os.path.exists(esc50_path):
         os.mkdir(esc50_path)
 
     sr_list = [44100, 20000];
