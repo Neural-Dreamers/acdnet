@@ -8,16 +8,17 @@ import time
 import numpy as np
 import torch.optim as optim
 
-import common.opts as opts
-import common.utils as u
-import resources.calculator as calc
-import resources.models as models
-import resources.train_generator as train_generator
 import torch
 
 sys.path.append(os.getcwd())
 sys.path.append(os.path.join(os.getcwd(), 'common'))
 # sys.path.append(os.path.join(os.getcwd(), 'torch/resources'));
+
+import common.opts as opts
+import common.utils as u
+import resources.calculator as calc
+import resources.models as models
+import resources.train_generator as train_generator
 
 # Reproducibility
 seed = 42
