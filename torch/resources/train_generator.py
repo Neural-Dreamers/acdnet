@@ -4,10 +4,10 @@ import sys
 
 import numpy as np
 
-import common.utils as u
-
 sys.path.append(os.getcwd())
 sys.path.append(os.path.join(os.getcwd(), 'common'))
+
+import common.utils as u
 
 
 class Generator:
