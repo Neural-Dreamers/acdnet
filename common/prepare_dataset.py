@@ -74,11 +74,11 @@ def rename_source_files(src_path):
     folds = 5
     audio_file_list = sorted(os.listdir(src_path))
 
-    # set increment to limit the number of samples in the fold to reduce training time
-    increment = 1
+    # set skip to limit the number of samples in the fold to reduce training time
+    skip = 0
 
     for fold in range(1, folds + 1):
-        for i in range(fold - 1, len(audio_file_list), folds + increment - 1):
+        for i in range(fold - 1, len(audio_file_list), folds + skip):
             audio_file = audio_file_list[i]
             label = audio_file.split('_')[0]
             index = audio_file.split('_')[1].split('.')[0]

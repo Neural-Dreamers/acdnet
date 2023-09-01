@@ -6,7 +6,7 @@
 #include "stdio.h"
 
 #define CROP_COUNT 10
-#define OUTPUT_WIDTH 50
+#define OUTPUT_WIDTH 27
 
 class NeuralNetworkScores {
 private:

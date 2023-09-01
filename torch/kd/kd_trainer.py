@@ -57,7 +57,7 @@ class Trainer:
             tpaths = glob.glob(teacher_path);
             if len(tpaths)>0 and os.path.isfile(tpaths[0]):
                 state = torch.load(tpaths[0], map_location=self.opt.device);
-                teacher = models.GetACDNetModelV2(self.opt.inputLength, 50, self.opt.sr, channel_config=state['config']).to(self.opt.device);
+                teacher = models.GetACDNetModelV2(self.opt.inputLength, 27, self.opt.sr, channel_config=state['config']).to(self.opt.device);
                 teacher.load_state_dict(state['weight']);
                 print('Teacher Model Loaded');
             else:
@@ -68,7 +68,7 @@ class Trainer:
             spaths = glob.glob(student_path);
             if len(spaths)>0 and os.path.isfile(spaths[0]):
                 state = torch.load(spaths[0], map_location=self.opt.device);
-                student = models.GetACDNetModelV2(self.opt.inputLength, 50, self.opt.sr, channel_config=state['config']).to(self.opt.device);
+                student = models.GetACDNetModelV2(self.opt.inputLength, 27, self.opt.sr, channel_config=state['config']).to(self.opt.device);
                 print('Student Model Loaded');
             else:
                 print('Student Model has not been found');

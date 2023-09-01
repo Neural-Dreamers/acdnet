@@ -19,7 +19,7 @@ target_index = 59
 feature_number_index = 52
 
 feature_count = 4000
-class_count = 50
+class_count = 27
 class_index = 1
 v1_field_count = 59
 

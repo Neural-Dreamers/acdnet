@@ -37,7 +37,7 @@ class ValGenerator:
             sound, target = self.data[i]
             sound = self.preprocess(sound).astype(np.float32)
             label = np.zeros((self.opt.nCrops, self.opt.nClasses))
-            label[:, target] = 1
+            label[:, target-1] = 1
 
             sounds.append(sound)
             labels.append(label)

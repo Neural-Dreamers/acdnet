@@ -68,7 +68,7 @@ class Trainer:
             state = torch.load(f, map_location=self.opt.device);
             config = state['config'];
             weight = state['weight'];
-            net = models.GetACDNetModel(self.opt.inputLength, 50, self.opt.sr, config).to(self.opt.device);
+            net = models.GetACDNetModel(self.opt.inputLength, 27, self.opt.sr, config).to(self.opt.device);
             net.load_state_dict(weight);
             print('Model found at: {}'.format(f));
             # calc.summary(net, (1,1,self.opt.inputLength));

@@ -28,7 +28,7 @@ if __name__ == '__main__':
     # file_paths = glob.glob(net_path);
     # state = torch.load(file_paths[0], map_location='cpu');
 
-    net = models.GetACDNetModel(66650, 50, 44100, config).to('cpu');
+    net = models.GetACDNetModel(66650, 27, 44100, config).to('cpu');
 
 
     new_state = {};
