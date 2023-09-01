@@ -6,3 +6,4 @@ datasets/esc50
 datasets/fsc22
 env
 .idea
+venv
