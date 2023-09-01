@@ -7,7 +7,7 @@ def parse():
     # General settings
     parser.add_argument('--netType', default='ACDNet',  required=False);
     parser.add_argument('--data', default='{}/datasets/'.format(os.getcwd()),  required=False);
-    parser.add_argument('--dataset', required=False, default='esc50', choices=['esc10','esc50', 'frog']);
+    parser.add_argument('--dataset', required=False, default='fsc22', choices=['esc10', 'esc50', 'frog', 'fsc22']);
     parser.add_argument('--BC', default=True, action='store_true', help='BC learning');
     parser.add_argument('--strongAugment', default=True,  action='store_true', help='Add scale and gain augmentation');
 
@@ -23,7 +23,7 @@ def parse():
     opt.warmup = 10;
 
     #Basic Net Settings
-    opt.nClasses = 50;
+    opt.nClasses = 27;
     opt.nFolds = 5;
     opt.splits = [i for i in range(1, opt.nFolds + 1)];
     opt.sr = 20000;
