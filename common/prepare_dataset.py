@@ -15,6 +15,8 @@ import wavio
 import wget
 import pydub
 import shutil
+import librosa
+import soundfile as sf
 
 
 def main():
@@ -25,9 +27,10 @@ def main():
         os.mkdir(fsc22_path)
 
     sr_list = [44100, 20000]
+    augmentation_data = {"pitch_shift": -2, "time_stretch": 0.6}
 
     # Set the URL of the FSC-22 dataset
-    url = 'https://storage.googleapis.com/kaggle-data-sets/2483929/4213460/bundle/archive.zip?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=gcp-kaggle-com%40kaggle-161607.iam.gserviceaccount.com%2F20230901%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20230901T073335Z&X-Goog-Expires=259200&X-Goog-SignedHeaders=host&X-Goog-Signature=6af2ef1129f3bb2d24cd411b35f9ec6363172c815bf70bbf220a8fd708795e4789464661a3aee1cba6fb454c2290bb698e7c84d0e12e36021558ea9690a99eb9220e04238fe82596fad869590f69c7e6f800e5df588d5c10acd3a205a84926c20eefe6c511be4ed3ab641fe99a2838e98d0e70f1131f96f292fcb2561c5a9c9903d11295b23a078bef22acb0e0c7e24b9aef0cd97249cb48ace1d29a1750769865a774dae5a706763e630a02ec4e912522cddf9e1ed365fb134bb6df498d04f7daf0a31b5911e2d575740d668d687136621aaaab58a5cc6294edb7b845e4cdfeacb758f212b34db34cf1b6b88325446da6d4f5b3c9ae14984655d5984ce6a047'
+    url = 'https://storage.googleapis.com/kaggle-data-sets/2483929/4213460/bundle/archive.zip?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=gcp-kaggle-com%40kaggle-161607.iam.gserviceaccount.com%2F20230902%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20230902T114852Z&X-Goog-Expires=259200&X-Goog-SignedHeaders=host&X-Goog-Signature=3d8a4c759dec7652e2d2f5a7524dba134df19248a0226fbde4f81fb0a3d2c6bf9f93a4a0c13dbf5622fd42a225c2ac4c10c936cd5fcac0bf01152717ae556b706e7406f21939dea700cf15b40f77e17d6251e38faf6496401687792332e6ad2e4fa63cdbe35d06846019131ce0f0862eeee935c9ac0a6d847a167ab4f518a60a07295573f4bb5fd7589a2d734260a5cb02af85e379c13d7d19228ce764ec91dc3e72df25e96046f16a4962ef755b5a93d6091a4969aed55bad65c82bd8c1ec870aa2d10a4ea043271a18eeb336574b75b7e2fe46f425447a0e901eef68dd654fb09028896999e50987b13b6f1dfb436ea6ad3157b233e3799ded9488153c87a9'
 
     # Set the save location for the dataset
     save_location = fsc22_path
@@ -53,6 +56,9 @@ def main():
     if not os.path.exists(fsc22_master_audio_path):
         os.rename(os.path.join(fsc22_master_path, 'Audio Wise V1.0'),
                   os.path.join(fsc22_master_path, 'audio'))
+
+    # Augmentation
+    do_augmentation(augmentation_data, fsc22_master_audio_path)
 
     # rename audio files and split into folds
     rename_source_files(fsc22_master_audio_path)
@@ -131,6 +137,21 @@ def create_dataset(src_path, fsc22_dst_path):
 
     np.savez(fsc22_dst_path, **fsc22_dataset)
 
+def do_augmentation(aug_data, src_path):
+    print('* Augmenting {}'.format(src_path))
+    for src_file in sorted(glob.glob(os.path.join(src_path, '*.wav'))):
+        aug = []
+        audio_data, sr = librosa.load(src_file)
+        for k, v in aug_data.items():
+            if k == "pitch_shift":
+                aug.append(librosa.effects.pitch_shift(audio_data, sr=sr, n_steps=v))
+            elif k == "time_stretch":
+                aug.append(librosa.effects.time_stretch(audio_data, rate=v))
+            else:
+                print("Invalid augmentation function")
+        for i,augmented in enumerate(aug):
+            out_file = src_file.split(".")[0] + str(i) + ".wav"
+            sf.write(os.path.join(src_path, out_file), augmented, sr)
 
 if __name__ == '__main__':
     main()
