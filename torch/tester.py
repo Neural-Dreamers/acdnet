@@ -10,8 +10,11 @@ import torch.optim as optim
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import precision_score, recall_score, f1_score
+from sklearn.metrics import roc_curve, auc
 import seaborn as sns
 from datetime import datetime
+from sklearn.preprocessing import label_binarize
+from itertools import cycle
 
 sys.path.append(os.getcwd())
 sys.path.append(os.path.join(os.getcwd(), 'common'))
@@ -49,9 +52,10 @@ class Trainer:
 
             acc, loss, precision, recall, f1 = self.__compute_metrics(y_pred, self.testY, lossFunc)
             confusion = self.__confusion_matrix(y_pred, self.testY)
+            fpr, tpr, roc_auc = self.__ROC_AUC(y_pred, self.testY)
 
         net.train()
-        return acc, loss, precision, recall, f1, confusion
+        return acc, loss, precision, recall, f1, confusion, fpr, tpr, roc_auc
 
     # Calculating average prediction (10 crops) and final accuracy
     def __compute_metrics(self, y_pred, y_target, lossFunc):
@@ -72,6 +76,26 @@ class Trainer:
 
         confusion = confusion_matrix(y_target, y_pred)
         return confusion
+
+    def __ROC_AUC(self, y_pred, y_target):
+        with torch.no_grad():
+            y_pred, y_target = self.__get_pred_actual_y(y_pred, y_target)
+
+        # Binarize the labels
+        n_classes = self.opt.nClasses
+        true_labels_bin = label_binarize(y_target, classes=range(1, n_classes+1))
+        predicted_labels_bin = label_binarize(y_pred, classes=range(1, n_classes+1))
+
+        # Compute ROC curve and AUC for each class
+        fpr = dict()
+        tpr = dict()
+        roc_auc = dict()
+
+        for i in range(n_classes):
+            fpr[i], tpr[i], _ = roc_curve(true_labels_bin[:, i], predicted_labels_bin[:, i])
+            roc_auc[i] = auc(fpr[i], tpr[i])
+
+        return fpr, tpr, roc_auc
 
     def __get_pred_actual_y(self, y_pred, y_target):
         # Reshape to shape theme like each sample contains 10 samples, calculate mean and find the indices that
@@ -125,6 +149,68 @@ class Trainer:
         save_path = os.path.join(confusion_matrix_path, filename)
         plt.savefig(save_path, bbox_inches='tight')
 
+    def __save_ROC_AUC(self, fpr, tpr, roc_auc):
+        n_classes = self.opt.nClasses
+
+        # Plot ROC curves for each class
+        plt.figure(figsize=(24, 24))
+
+        hex_colors = [
+            "#FF0000",  # Red
+            "#00FF00",  # Green
+            "#0000FF",  # Blue
+            "#FFFF00",  # Yellow
+            "#FF00FF",  # Magenta
+            "#00FFFF",  # Cyan
+            "#FFA500",  # Orange
+            "#FF4500",  # OrangeRed
+            "#FFD700",  # Gold
+            "#8A2BE2",  # BlueViolet
+            "#7FFF00",  # Chartreuse
+            "#DC143C",  # Crimson
+            "#48D1CC",  # MediumTurquoise
+            "#2E8B57",  # SeaGreen
+            "#800080",  # Purple
+            "#ADFF2F",  # GreenYellow
+            "#FF1493",  # DeepPink
+            "#9370DB",  # MediumPurple
+            "#8B4513",  # SaddleBrown
+            "#20B2AA",  # LightSeaGreen
+            "#8B008B",  # DarkMagenta
+            "#FF6347",  # Tomato
+            "#556B2F",  # DarkOliveGreen
+            "#6B8E23",  # OliveDrab
+            "#BDB76B",  # DarkKhaki
+            "#808080",  # Gray
+            "#DAA520",  # GoldenRod
+        ]
+
+        colors = cycle(hex_colors)  # Adjust as needed for your number of classes
+
+        for i, color in zip(range(n_classes), colors):
+            plt.plot(fpr[i], tpr[i], color=color, lw=2,
+                     label=f'{self.opt.class_labels[i]} (AUC = {roc_auc[i]:.3f})')
+
+        plt.plot([0, 1], [0, 1], color='black', lw=2, linestyle='--')  # Diagonal line for reference
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title('Receiver Operating Characteristic (ROC) Curve and AUC')
+        plt.legend(loc='lower right')
+
+        roc_auc_path = os.path.join(os.getcwd(), 'torch\\metrics\\roc_auc')
+        curr_datetime = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
+
+        filename = f'roc_auc-{format(curr_datetime)}.png'
+
+        if not os.path.exists(roc_auc_path):
+            os.makedirs(roc_auc_path)
+
+        # Save the plot to the specified folder
+        save_path = os.path.join(roc_auc_path, filename)
+        plt.savefig(save_path, bbox_inches='tight')
+
     def TestModel(self, run=1):
         lossFunc = torch.nn.KLDivLoss(reduction='batchmean')
         dir = os.getcwd()
@@ -142,11 +228,12 @@ class Trainer:
             self.load_test_data()
             net.eval()
             # Test standard way with 10 crops
-            val_acc, val_loss, precision, recall, f1, confusion = self.__validate(net, lossFunc)
+            val_acc, val_loss, precision, recall, f1, confusion, fpr, tpr, roc_auc = self.__validate(net, lossFunc)
             print('Testing - Val: Loss {:.3f}  Acc(top1) {:.2f}%'.format(val_loss, val_acc))
             print('Testing - Val: Precision {:.3f}  Recall {:.3f}  F1-Score {:.3f}%'.format(precision, recall, f1))
             self.__save_metrics(val_acc, val_loss, precision, recall, f1)
             self.__save_confusion_matrix(confusion)
+            self.__save_ROC_AUC(fpr, tpr, roc_auc)
 
 
 if __name__ == '__main__':
