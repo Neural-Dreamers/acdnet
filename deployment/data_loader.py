@@ -41,7 +41,7 @@ class Trainer:
     def load_test_data(self):
         if self.testX is None:
             print('Loading test data');
-            data = np.load(os.path.join(self.opt.data, self.opt.dataset, 'test_data_20khz/fold{}_test4000.npz'.format(self.opt.split)), allow_pickle=True);
+            data = np.load(os.path.join(self.opt.data, self.opt.dataset, 'test_data_20khz/fold{}_test4050.npz'.format(self.opt.split)), allow_pickle=True);
             self.testX = data['x'];
             self.testY = data['y'];
             print('Done');

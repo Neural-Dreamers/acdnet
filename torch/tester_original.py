@@ -35,7 +35,7 @@ class Trainer:
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu");
 
     def load_data(self):
-        data = np.load(os.path.join(self.opt.data, self.opt.dataset, 'test_data_44khz/fold{}_test4000.npz'.format(self.split)), allow_pickle=True);
+        data = np.load(os.path.join(self.opt.data, self.opt.dataset, 'test_data_44khz/fold{}_test4050.npz'.format(self.split)), allow_pickle=True);
         self.testX = torch.tensor(np.moveaxis(data['x'], 3, 1)).to(self.device);
         self.testY = torch.tensor(data['y']).to(self.device);
         print(self.testX.shape);

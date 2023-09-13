@@ -4,6 +4,8 @@ import os
 import random
 import sys
 import time
+import matplotlib.pyplot as plt
+from datetime import datetime
 
 import numpy as np
 import torch.optim as optim
@@ -71,8 +73,11 @@ class Trainer:
         optimizer = optim.SGD(net.parameters(), lr=self.opt.LR, weight_decay=self.opt.weightDecay,
                               momentum=self.opt.momentum, nesterov=True)
 
+        metrics = {}
+
         # self.opt.nEpochs = 1957 if self.opt.split == 4 else 2000;
         for epochIdx in range(self.opt.nEpochs):
+            metrics['{}'.format(epochIdx)] = {}
             epoch_start_time = time.time()
             optimizer.param_groups[0]['lr'] = self.__get_lr(epochIdx + 1)
             cur_lr = optimizer.param_groups[0]['lr']
@@ -109,6 +114,11 @@ class Trainer:
             self.__on_epoch_end(epoch_start_time, epoch_train_time, epochIdx, cur_lr, tr_loss, tr_acc, val_loss,
                                 val_acc)
 
+            metrics['{}'.format(epochIdx)]['tr_acc'] = tr_acc
+            metrics['{}'.format(epochIdx)]['tr_loss'] = tr_loss
+            metrics['{}'.format(epochIdx)]['val_acc'] = val_acc
+            metrics['{}'.format(epochIdx)]['val_loss'] = val_loss
+
             running_loss = 0
             running_acc = 0
             net.train()
@@ -116,9 +126,11 @@ class Trainer:
         total_time_taken = time.time() - train_start_time
         print("Execution finished in: {}".format(u.to_hms(total_time_taken)))
 
+        self.__save_acc_loss_plot(metrics)
+
     def load_test_data(self):
         data = np.load(os.path.join(self.opt.data, self.opt.dataset,
-                                    'test_data_{}khz/fold{}_test4000.npz'.format(self.opt.sr // 1000, self.opt.split)),
+                                    'test_data_{}khz/fold{}_test4050.npz'.format(self.opt.sr // 1000, self.opt.split)),
                        allow_pickle=True)
         self.testX = torch.tensor(np.moveaxis(data['x'], 3, 1)).to(self.opt.device)
         self.testY = torch.tensor(data['y']).to(self.opt.device)
@@ -182,6 +194,51 @@ class Trainer:
         # print(line)
         sys.stdout.write(line)
         sys.stdout.flush()
+
+    def __save_acc_loss_plot(self, metrics):
+        # Extract time, accuracies, and losses from the metrics dictionary
+        epochs = list(metrics.keys())
+        tr_acc = [entry['tr_acc'] for entry in metrics.values()]
+        tr_loss = [entry['tr_loss'] for entry in metrics.values()]
+        val_acc = [entry['val_acc'] for entry in metrics.values()]
+        val_loss = [entry['val_loss'] for entry in metrics.values()]
+
+        # Create a figure and axis
+        fig, ax1 = plt.subplots()
+
+        # Plot accuracy lines
+        ax1.set_xlabel('Time')
+        ax1.set_ylabel('Accuracy', color='tab:blue')
+        ax1.plot(epochs, tr_acc, color='tab:green', marker='o', label='Training Accuracy')
+        ax1.plot(epochs, val_acc, color='tab:red', marker='x', label='Validation Accuracy ')
+        ax1.tick_params(axis='y', labelcolor='tab:blue')
+
+        # Create a second y-axis for loss lines
+        ax2 = ax1.twinx()  # Share the same x-axis
+        ax2.set_ylabel('Loss', color='tab:red')
+        ax2.plot(epochs, tr_loss, color='tab:gold', marker='s', label='Loss 1')
+        ax2.plot(epochs, val_loss, color='tab:blue', marker='^', label='Loss 2')
+        ax2.tick_params(axis='y', labelcolor='tab:red')
+
+        # Add a legend
+        lines, labels = ax1.get_legend_handles_labels()
+        lines2, labels2 = ax2.get_legend_handles_labels()
+        ax2.legend(lines + lines2, labels + labels2, loc='best')
+
+        # Set a title
+        plt.title('Accuracy and Loss Over Epochs')
+
+        confusion_matrix_path = os.path.join(os.getcwd(), 'torch\\metrics\\accuracy_matrices')
+        curr_datetime = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
+
+        filename = f'training_metrics-{format(curr_datetime)}.png'
+
+        if not os.path.exists(confusion_matrix_path):
+            os.makedirs(confusion_matrix_path)
+
+        # Save the plot to the specified folder
+        save_path = os.path.join(confusion_matrix_path, filename)
+        plt.savefig(save_path, bbox_inches='tight')
 
     def __save_model(self, acc, epochIdx, net):
         if acc > self.bestAcc:

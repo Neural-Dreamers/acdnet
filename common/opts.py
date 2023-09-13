@@ -35,6 +35,11 @@ def parse():
     opt.augmentation_data = {"pitch_shift": -2, "time_stretch": 0.6}
     opt.mixup_factor = 2
 
+    opt.class_labels = ["Fire", "Rain", "Thunderstorm", "Waterdrops", "Wind", "Silence", "Tree Falling",
+                        "Helicopter", "Vehicle Engine", "Axe", "Chainsaw", "Generator", "Handsaw", "Firework",
+                        "Gunshot", "Woodchop", "Whistling", "Speaking", "Footsteps", "Clapping", "Insect", "Frog",
+                        "Bird chirping", "Wing flapping", "Lion", "Wolf howl", "Squirrel"]
+
     return opt
 
 
