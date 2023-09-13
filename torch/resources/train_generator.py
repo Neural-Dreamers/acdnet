@@ -121,7 +121,8 @@ def preprocess_dataset(train_sounds, train_labels, options):
         #          options.sr)
         # sf.write(os.path.join("D:\\ACADEMIC\\FYP\\acdnet\\datasets\\fsc22\\generated_sounds", filename.replace('.', "sh.")), shifted_sound,
         #          options.sr)
-
+        # if i == 50:
+        #     break
     sounds = np.asarray(sounds)
     labels = np.asarray(labels)
     return sounds, labels
