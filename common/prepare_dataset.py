@@ -28,8 +28,7 @@ def main():
     augmentation_data = {"pitch_shift": -2, "time_stretch": 0.6}
 
     # Set the URL of the FSC-22 dataset
-    url = 'https://storage.googleapis.com/kaggle-data-sets/2483929/4213460/bundle/archive.zip?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=gcp-kaggle-com%40kaggle-161607.iam.gserviceaccount.com%2F20230902%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20230902T114852Z&X-Goog-Expires=259200&X-Goog-SignedHeaders=host&X-Goog-Signature=3d8a4c759dec7652e2d2f5a7524dba134df19248a0226fbde4f81fb0a3d2c6bf9f93a4a0c13dbf5622fd42a225c2ac4c10c936cd5fcac0bf01152717ae556b706e7406f21939dea700cf15b40f77e17d6251e38faf6496401687792332e6ad2e4fa63cdbe35d06846019131ce0f0862eeee935c9ac0a6d847a167ab4f518a60a07295573f4bb5fd7589a2d734260a5cb02af85e379c13d7d19228ce764ec91dc3e72df25e96046f16a4962ef755b5a93d6091a4969aed55bad65c82bd8c1ec870aa2d10a4ea043271a18eeb336574b75b7e2fe46f425447a0e901eef68dd654fb09028896999e50987b13b6f1dfb436ea6ad3157b233e3799ded9488153c87a9'
-
+    url = 'https://storage.googleapis.com/kaggle-data-sets/2483929/4213460/bundle/archive.zip'
     # Set the save location for the dataset
     save_location = fsc22_path
 
@@ -122,7 +121,7 @@ def create_dataset(src_path, fsc22_dst_path):
             sound = wavio.read(wav_file).data.T[0]
             # start = sound.nonzero()[0].min()
             # end = sound.nonzero()[0].max()
-            # sound = sound[start: end + 1]  # Remove silent sections
+            # sound = sound[start: end + 1] # Remove silent sections
             label = int(os.path.splitext(wav_file)[0].split('-')[-1])
             fsc22_sounds.append(sound)
             fsc22_labels.append(label)
@@ -131,6 +130,7 @@ def create_dataset(src_path, fsc22_dst_path):
         fsc22_dataset['fold{}'.format(fold)]['labels'] = fsc22_labels
 
     np.savez(fsc22_dst_path, **fsc22_dataset)
+
 
 if __name__ == '__main__':
     main()

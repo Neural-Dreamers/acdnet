@@ -207,18 +207,18 @@ class Trainer:
         fig, ax1 = plt.subplots()
 
         # Plot accuracy lines
-        ax1.set_xlabel('Time')
-        ax1.set_ylabel('Accuracy', color='tab:blue')
-        ax1.plot(epochs, tr_acc, color='tab:green', marker='o', label='Training Accuracy')
-        ax1.plot(epochs, val_acc, color='tab:red', marker='x', label='Validation Accuracy ')
-        ax1.tick_params(axis='y', labelcolor='tab:blue')
+        ax1.set_xlabel('Epochs')
+        ax1.set_ylabel('Accuracy', color='black')
+        ax1.plot(epochs, tr_acc, color='#800000', marker='o', label='Training Accuracy')
+        ax1.plot(epochs, val_acc, color='#000075', marker='x', label='Validation Accuracy ')
+        ax1.tick_params(axis='y', labelcolor='black')
 
         # Create a second y-axis for loss lines
         ax2 = ax1.twinx()  # Share the same x-axis
-        ax2.set_ylabel('Loss', color='tab:red')
-        ax2.plot(epochs, tr_loss, color='tab:cyan', marker='s', label='Training Loss')
-        ax2.plot(epochs, val_loss, color='tab:blue', marker='^', label='Validation Loss')
-        ax2.tick_params(axis='y', labelcolor='tab:red')
+        ax2.set_ylabel('Loss', color='black')
+        ax2.plot(epochs, tr_loss, color='#3cb44b', marker='s', label='Training Loss')
+        ax2.plot(epochs, val_loss, color='#f58231', marker='^', label='Validation Loss')
+        ax2.tick_params(axis='y', labelcolor='black')
 
         # Add a legend
         lines, labels = ax1.get_legend_handles_labels()
@@ -228,16 +228,16 @@ class Trainer:
         # Set a title
         plt.title('Accuracy and Loss Over Epochs')
 
-        confusion_matrix_path = os.path.join(os.getcwd(), 'torch\\metrics\\accuracy_matrices')
+        accuracy_matrices_path = os.path.join(os.getcwd(), 'torch\\metrics\\accuracy_matrices')
         curr_datetime = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
 
         filename = f'training_metrics-{format(curr_datetime)}.png'
 
-        if not os.path.exists(confusion_matrix_path):
-            os.makedirs(confusion_matrix_path)
+        if not os.path.exists(accuracy_matrices_path):
+            os.makedirs(accuracy_matrices_path)
 
         # Save the plot to the specified folder
-        save_path = os.path.join(confusion_matrix_path, filename)
+        save_path = os.path.join(accuracy_matrices_path, filename)
         plt.savefig(save_path, bbox_inches='tight')
 
     def __save_model(self, acc, epochIdx, net):
