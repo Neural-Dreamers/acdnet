@@ -1,6 +1,20 @@
 import numpy as np
 import random
 
+
+"""
+padding(): This method pads a sound with a specified amount of zeros on all sides. The padding can be used to ensure that all sounds have the same length, which is necessary for some operations such as mixing.
+random_crop(): This method randomly crops a sound to a specified length. This can be used to augment the training data and make the model more robust to different sound lengths.
+normalize(): This method normalizes a sound to a specified amplitude. This can be used to make the sounds more consistent and easier to train on.
+random_scale(): This method randomly scales a sound by a specified factor. This can be used to augment the training data and make the model more robust to different sound levels.
+random_gain(): This method randomly applies a gain to a sound. This can be used to augment the training data and make the model more robust to different sound intensities.
+multi_crop(): This method crops a sound into a specified number of overlapping crops. This can be used for testing the model on different sound lengths.
+a_weight(): This method computes the A-weighting curve for a specified sampling frequency. The A-weighting curve is a frequency-dependent weighting that is used to measure the loudness of sounds.
+compute_gain(): This method computes the gain of a sound at a specified sampling frequency. The gain is a measure of the loudness of a sound relative to a reference sound.
+mix(): This method mixes two sounds together. The mixing is done by first computing the gains of the two sounds, and then combining the sounds with a weighted sum.
+to_hms(): This method converts a time in seconds to a human-readable format (hours, minutes, and seconds).
+"""
+
 #Fixed seed for reproduci
 random.seed(42)
 # Default data augmentation

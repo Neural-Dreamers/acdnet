@@ -15,8 +15,6 @@ import wavio
 import wget
 import pydub
 import shutil
-import librosa
-import soundfile as sf
 
 
 def main():
@@ -56,9 +54,6 @@ def main():
     if not os.path.exists(fsc22_master_audio_path):
         os.rename(os.path.join(fsc22_master_path, 'Audio Wise V1.0'),
                   os.path.join(fsc22_master_path, 'audio'))
-
-    # Augmentation
-    do_augmentation(augmentation_data, fsc22_master_audio_path)
 
     # rename audio files and split into folds
     rename_source_files(fsc22_master_audio_path)
@@ -125,9 +120,9 @@ def create_dataset(src_path, fsc22_dst_path):
 
         for wav_file in sorted(glob.glob(os.path.join(src_path, '{}-*.wav'.format(fold)))):
             sound = wavio.read(wav_file).data.T[0]
-            start = sound.nonzero()[0].min()
-            end = sound.nonzero()[0].max()
-            sound = sound[start: end + 1]  # Remove silent sections
+            # start = sound.nonzero()[0].min()
+            # end = sound.nonzero()[0].max()
+            # sound = sound[start: end + 1]  # Remove silent sections
             label = int(os.path.splitext(wav_file)[0].split('-')[-1])
             fsc22_sounds.append(sound)
             fsc22_labels.append(label)
@@ -136,22 +131,6 @@ def create_dataset(src_path, fsc22_dst_path):
         fsc22_dataset['fold{}'.format(fold)]['labels'] = fsc22_labels
 
     np.savez(fsc22_dst_path, **fsc22_dataset)
-
-def do_augmentation(aug_data, src_path):
-    print('* Augmenting {}'.format(src_path))
-    for src_file in sorted(glob.glob(os.path.join(src_path, '*.wav'))):
-        aug = []
-        audio_data, sr = librosa.load(src_file)
-        for k, v in aug_data.items():
-            if k == "pitch_shift":
-                aug.append(librosa.effects.pitch_shift(audio_data, sr=sr, n_steps=v))
-            elif k == "time_stretch":
-                aug.append(librosa.effects.time_stretch(audio_data, rate=v))
-            else:
-                print("Invalid augmentation function")
-        for i,augmented in enumerate(aug):
-            out_file = src_file.split(".")[0] + str(i) + ".wav"
-            sf.write(os.path.join(src_path, out_file), augmented, sr)
 
 if __name__ == '__main__':
     main()
