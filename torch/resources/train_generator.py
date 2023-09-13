@@ -113,14 +113,14 @@ def preprocess_dataset(train_sounds, train_labels, options):
                 print("Invalid augmentation function")
 
         # Save mixed and preprocessed audio file
-        lab = list(zip(*sorted([(i, v) for i, v in enumerate(label, 1) if v>0], key=lambda x:x[1], reverse=True)))[0]
-        filename = '{}_{}_{}.wav'.format(lab[0], lab[1],i)
-        sf.write(os.path.join("D:\\ACADEMIC\\FYP\\acdnet\\datasets\\fsc22\\generated_sounds", filename), sound,
-                 options.sr)
-        sf.write(os.path.join("D:\\ACADEMIC\\FYP\\acdnet\\datasets\\fsc22\\generated_sounds", filename.replace('.', "st.")), stretched_sound,
-                 options.sr)
-        sf.write(os.path.join("D:\\ACADEMIC\\FYP\\acdnet\\datasets\\fsc22\\generated_sounds", filename.replace('.', "sh.")), shifted_sound,
-                 options.sr)
+        # lab = list(zip(*sorted([(i, v) for i, v in enumerate(label, 1) if v>0], key=lambda x:x[1], reverse=True)))[0]
+        # filename = '{}_{}_{}.wav'.format(lab[0], lab[1],i)
+        # sf.write(os.path.join("D:\\ACADEMIC\\FYP\\acdnet\\datasets\\fsc22\\generated_sounds", filename), sound,
+        #          options.sr)
+        # sf.write(os.path.join("D:\\ACADEMIC\\FYP\\acdnet\\datasets\\fsc22\\generated_sounds", filename.replace('.', "st.")), stretched_sound,
+        #          options.sr)
+        # sf.write(os.path.join("D:\\ACADEMIC\\FYP\\acdnet\\datasets\\fsc22\\generated_sounds", filename.replace('.', "sh.")), shifted_sound,
+        #          options.sr)
 
     sounds = np.asarray(sounds)
     labels = np.asarray(labels)
