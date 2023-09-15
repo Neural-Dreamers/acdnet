@@ -68,7 +68,7 @@ class ValGenerator:
 if __name__ == '__main__':
     opt = opts.parse()
     opts.display_info(opt)
-    opt.batchSize = 4000
+    opt.batchSize = 3900
 
     for sr in [44100, 20000]:
         opt.sr = sr
@@ -92,8 +92,8 @@ if __name__ == '__main__':
             valGen = ValGenerator(sounds, labels, opt)
             valX, valY = valGen.get_data()
 
-            print('{}/fold{}_test4000'.format(test_data_dir, s))
-            np.savez_compressed('{}/fold{}_test4000'.format(test_data_dir, s), x=valX, y=valY)
+            print('{}/fold{}_test3900'.format(test_data_dir, s))
+            np.savez_compressed('{}/fold{}_test3900'.format(test_data_dir, s), x=valX, y=valY)
             print('split-{} test with shape x{} and y{} took {:.2f} secs'.format(s, valX.shape, valY.shape,
                                                                                  time.perf_counter() - start_time))
             sys.stdout.flush()

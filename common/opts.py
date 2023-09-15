@@ -23,7 +23,7 @@ def parse():
     opt.warmup = 10;
 
     #Basic Net Settings
-    opt.nClasses = 27;
+    opt.nClasses = 26;
     opt.nFolds = 5;
     opt.splits = [i for i in range(1, opt.nFolds + 1)];
     opt.sr = 20000;

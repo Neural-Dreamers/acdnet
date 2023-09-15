@@ -81,6 +81,9 @@ def rename_source_files(src_path):
         for i in range(fold - 1, len(audio_file_list), folds + skip):
             audio_file = audio_file_list[i]
             label = audio_file.split('_')[0]
+            if label == '16': continue
+            if int(label) > 16:
+                label = str(int(label) - 1)
             index = audio_file.split('_')[1].split('.')[0]
             new_filename = str(fold) + '-' + index + '-' + label + '.wav'
             os.rename(os.path.join(src_path, audio_file), os.path.join(src_path, new_filename))
@@ -119,9 +122,9 @@ def create_dataset(src_path, fsc22_dst_path):
 
         for wav_file in sorted(glob.glob(os.path.join(src_path, '{}-*.wav'.format(fold)))):
             sound = wavio.read(wav_file).data.T[0]
-            start = sound.nonzero()[0].min()
-            end = sound.nonzero()[0].max()
-            sound = sound[start: end + 1]  # Remove silent sections
+            # start = sound.nonzero()[0].min()
+            # end = sound.nonzero()[0].max()
+            # sound = sound[start: end + 1]  # Remove silent sections
             label = int(os.path.splitext(wav_file)[0].split('-')[-1])
             fsc22_sounds.append(sound)
             fsc22_labels.append(label)

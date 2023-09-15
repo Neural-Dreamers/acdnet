@@ -18,7 +18,7 @@ class Tester:
 
     # Loading Test data
     def load_data(self):
-        data = np.load(os.path.join(self.opt.data, self.opt.dataset, 'test_data_20khz/fold{}_test4000.npz'.format(self.opt.split)), allow_pickle=True);
+        data = np.load(os.path.join(self.opt.data, self.opt.dataset, 'test_data_20khz/fold{}_test3900.npz'.format(self.opt.split)), allow_pickle=True);
         self.testX = data['x'];
         self.testY = data['y'];
         print(self.testX.shape);
