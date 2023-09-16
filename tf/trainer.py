@@ -24,7 +24,7 @@ class Trainer:
         self.trainGen = train_generator.setup(self.opt, self.opt.split);
 
     def Train(self):
-        model = models.GetAcdnetModel(self.opt.inputLength, 27, self.opt.sr, ch_config = self.opt.model_config);
+        model = models.GetAcdnetModel(self.opt.inputLength, 26, self.opt.sr, ch_config = self.opt.model_config);
         model.summary();
 
         loss = 'kullback_leibler_divergence';

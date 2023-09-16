@@ -176,7 +176,7 @@ class Trainer:
         return kd_loss
 
     def load_test_data(self):
-        data = np.load(os.path.join(self.opt.data, self.opt.dataset, 'test_data_{}khz/fold{}_test4000.npz'.format(self.opt.sr//1000, self.opt.split)), allow_pickle=True);
+        data = np.load(os.path.join(self.opt.data, self.opt.dataset, 'test_data_{}khz/fold{}_test3900.npz'.format(self.opt.sr//1000, self.opt.split)), allow_pickle=True);
         self.testX = torch.tensor(np.moveaxis(data['x'], 3, 1)).to(self.opt.device);
         self.testY = torch.tensor(data['y']).to(self.opt.device);
 

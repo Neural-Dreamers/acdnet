@@ -6,7 +6,7 @@ import numpy as np;
 
 #acdnet in functional way for safe serialization for embedded devices
 class ACDNet:
-    def __init__(self, input_length=66650, n_class=27, sr=44100, ch_conf=None):
+    def __init__(self, input_length=66650, n_class=26, sr=44100, ch_conf=None):
 
         self.input_length = input_length;
         self.ch_config = ch_conf;
@@ -97,7 +97,7 @@ class ConvBlock:
         layer = L.ReLU()(layer);
         return layer;
 
-def GetAcdnetModel(input_length=66650, n_class=27, sr=44100, ch_config=None):
+def GetAcdnetModel(input_length=66650, n_class=26, sr=44100, ch_config=None):
     acdnet = ACDNet(input_length, n_class, sr, ch_config);
     return acdnet.createModel();
 

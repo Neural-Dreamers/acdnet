@@ -123,7 +123,7 @@ class ACDNetV2(nn.Module):
 
         return c;
 
-def GetACDNetModel(input_len=30225, nclass=27, sr=20000, channel_config=None):
+def GetACDNetModel(input_len=30225, nclass=26, sr=20000, channel_config=None):
     net = ACDNetV2(input_len, nclass, sr, ch_conf=channel_config);
     return net;
 

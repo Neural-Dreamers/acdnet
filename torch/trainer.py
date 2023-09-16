@@ -158,14 +158,14 @@ class Trainer:
             # Reshape to shape theme like each sample contains 10 samples, calculate mean and find the indices that
             # has the highest average value for each sample
             if self.opt.nCrops == 1:
-                y_pred = y_pred.argmax(dim=1)
-                y_target = y_target.argmax(dim=1)
+                y_pred = y_pred.argmax(dim=1) + 1
+                y_target = y_target.argmax(dim=1) + 1
             else:
                 y_pred = (y_pred.reshape(y_pred.shape[0] // self.opt.nCrops, self.opt.nCrops, y_pred.shape[1])).mean(
-                    dim=1).argmax(dim=1)
+                    dim=1).argmax(dim=1) + 1
                 y_target = (
                     y_target.reshape(y_target.shape[0] // self.opt.nCrops, self.opt.nCrops, y_target.shape[1])).mean(
-                    dim=1).argmax(dim=1)
+                    dim=1).argmax(dim=1) + 1
             acc = (((y_pred == y_target) * 1).float().mean() * 100).item()
             # valLossFunc = torch.nn.KLDivLoss();
             loss = lossFunc(y_pred.float().log(), y_target.float()).item()
