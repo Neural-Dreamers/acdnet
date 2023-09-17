@@ -104,7 +104,7 @@ def convert_sr(src_path, dst_path, sr):
         # Set the audio channels to 1
         audio_segment = audio_segment.set_channels(1)
 
-        # Set the audio sample rate to 16000
+        # Set the audio sample rate to sr
         audio_segment = audio_segment.set_frame_rate(sr)
 
         # Export the file to dst_file

@@ -14,7 +14,7 @@ def parse():
     opt = parser.parse_args();
 
     #Leqarning settings
-    opt.batchSize = 64;
+    opt.batchSize = 32;
     opt.weightDecay = 5e-4;
     opt.momentum = 0.9;
     opt.nEpochs = 2000;
@@ -31,6 +31,8 @@ def parse():
 
     #Test data
     opt.nCrops = 10;
+
+    opt.augmentation_data = {"time_stretch": 0.6, "pitch_shift": -2}
 
     return opt
 

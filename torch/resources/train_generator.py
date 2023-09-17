@@ -3,6 +3,8 @@ import random
 import sys
 
 import numpy as np
+import soundfile as sf
+import librosa
 
 sys.path.append(os.getcwd())
 sys.path.append(os.path.join(os.getcwd(), 'common'))
@@ -36,14 +38,20 @@ class Generator:
         # Generates data containing batch_size samples
         sounds = []
         labels = []
-        indexes = None
-        for i in range(self.batch_size):
+
+        selected = []
+
+        for i in range(self.batch_size*2):
             # Training phase of BC learning
             # Select two training examples
             while True:
-                sound1, label1 = self.data[random.randint(0, len(self.data) - 1)]
-                sound2, label2 = self.data[random.randint(0, len(self.data) - 1)]
-                if label1 != label2:
+                ind1 = random.randint(0, len(self.data) - 1)
+                ind2 = random.randint(0, len(self.data) - 1)
+
+                sound1, label1 = self.data[ind1]
+                sound2, label2 = self.data[ind2]
+                if label1 != label2 and "{}{}".format(ind1, ind2) not in selected:
+                    selected.append("{}{}".format(ind1, ind2))
                     break
             sound1 = self.preprocess(sound1)
             sound2 = self.preprocess(sound2)
@@ -81,6 +89,28 @@ class Generator:
 
         return sound
 
+# def preprocess_dataset(train_sounds, train_labels, options):
+#     sounds = train_sounds
+#     labels = train_labels
+#
+#     for i, audio_data in enumerate(train_sounds):
+#         for k, v in options.augmentation_data.items():
+#             if k == "time_stretch":
+#                 stretched_audio_data = librosa.effects.time_stretch(audio_data, rate=v)
+#                 stretched_sound = np.array(stretched_audio_data)
+#                 sounds.append(stretched_sound)
+#                 labels.append(train_labels[i])
+#             elif k == "pitch_shift":
+#                 shifted_audio_data = librosa.effects.pitch_shift(audio_data, sr=options.sr, n_steps=v)
+#                 shifted_sound = np.array(shifted_audio_data)
+#                 sounds.append(shifted_sound)
+#                 labels.append(train_labels[i])
+#             else:
+#                 print("Invalid augmentation function")
+#
+#     sounds = np.asarray(sounds)
+#     labels = np.asarray(labels)
+#     return sounds, labels
 
 def setup(opt, split):
     dataset = np.load(os.path.join(opt.data, opt.dataset, 'wav{}.npz'.format(opt.sr // 1000)), allow_pickle=True);
@@ -93,6 +123,7 @@ def setup(opt, split):
             train_sounds.extend(sounds)
             train_labels.extend(labels)
 
-    trainGen = Generator(train_sounds, train_labels, opt)
+    preprocessed_sounds, preprocessed_labels = train_sounds, train_labels
+    trainGen = Generator(preprocessed_sounds, preprocessed_labels, opt)
 
     return trainGen
