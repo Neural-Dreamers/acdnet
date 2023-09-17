@@ -244,6 +244,6 @@ class ACDNetQuant(nn.Module):
 
         return c;
 
-def GetACDNetQuantModel(input_len=30225, nclass=27, sr=20000, channel_config=None):
+def GetACDNetQuantModel(input_len=30225, nclass=26, sr=20000, channel_config=None):
     net = ACDNetQuant(input_len, nclass, sr, ch_conf=channel_config);
     return net;
