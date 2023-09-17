@@ -89,28 +89,31 @@ class Generator:
 
         return sound
 
-# def preprocess_dataset(train_sounds, train_labels, options):
-#     sounds = train_sounds
-#     labels = train_labels
-#
-#     for i, audio_data in enumerate(train_sounds):
-#         for k, v in options.augmentation_data.items():
-#             if k == "time_stretch":
-#                 stretched_audio_data = librosa.effects.time_stretch(audio_data, rate=v)
-#                 stretched_sound = np.array(stretched_audio_data)
-#                 sounds.append(stretched_sound)
-#                 labels.append(train_labels[i])
-#             elif k == "pitch_shift":
-#                 shifted_audio_data = librosa.effects.pitch_shift(audio_data, sr=options.sr, n_steps=v)
-#                 shifted_sound = np.array(shifted_audio_data)
-#                 sounds.append(shifted_sound)
-#                 labels.append(train_labels[i])
-#             else:
-#                 print("Invalid augmentation function")
-#
-#     sounds = np.asarray(sounds)
-#     labels = np.asarray(labels)
-#     return sounds, labels
+def preprocess_dataset(train_sounds, train_labels, options, temp_path):
+    sounds = train_sounds
+    labels = train_labels
+
+    for i, audio_data in enumerate(train_sounds):
+        sf.write(temp_path, audio_data, options.sr)
+        sound_wave, sample_rate = librosa.load(temp_path)
+        for k, v in options.augmentation_data.items():
+            if k == "time_stretch":
+                stretched_audio_data = librosa.effects.time_stretch(sound_wave, rate=v)
+                stretched_sound = np.array(stretched_audio_data)
+                sounds.append(stretched_sound)
+                labels.append(train_labels[i])
+            elif k == "pitch_shift":
+                shifted_audio_data = librosa.effects.pitch_shift(sound_wave, sr=sample_rate, n_steps=v)
+                shifted_sound = np.array(shifted_audio_data)
+                sounds.append(shifted_sound)
+                labels.append(train_labels[i])
+            else:
+                print("Invalid augmentation function")
+        os.remove(temp_path)
+
+    sounds = np.asarray(sounds)
+    labels = np.asarray(labels)
+    return sounds, labels
 
 def setup(opt, split):
     dataset = np.load(os.path.join(opt.data, opt.dataset, 'wav{}.npz'.format(opt.sr // 1000)), allow_pickle=True);
@@ -123,7 +126,8 @@ def setup(opt, split):
             train_sounds.extend(sounds)
             train_labels.extend(labels)
 
-    preprocessed_sounds, preprocessed_labels = train_sounds, train_labels
+    preprocessed_sounds, preprocessed_labels = preprocess_dataset(train_sounds, train_labels, opt,
+                                                                  os.path.join(opt.data, opt.dataset, "temp.wav"))
     trainGen = Generator(preprocessed_sounds, preprocessed_labels, opt)
 
     return trainGen

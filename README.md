@@ -15,9 +15,10 @@ Environmental sound classification on the edge: A pipeline for deep acoustic net
 ## A. Training and Compressing ACDNet
 
 #### A.1 Prerequisits
+(pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118 wavio wget pydub librosa matplotlib seaborn soundfile)
 1. Create `python 3.7+` development environment.
 2. Install `torch`.
-2. Install `wavio`.
+2. Install `wavio`. 
 3. Install `wget` for downloading ESC-50 over HTTP.
 4. Install `FFmpeg` for downsampling and upsampling audio recordings. 
     * Installation of `FFmpeg` requires `sudo` permission. If `sudo` permission is not available, virtual environment (e.g. `miniconda` needs to be used). Do not use `pip` to install `FFmpeg`, as it will very likely raise errors.
