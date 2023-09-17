@@ -27,8 +27,7 @@ def main():
     sr_list = [44100, 20000]
 
     # Set the URL of the FSC-22 dataset
-    url = 'https://storage.googleapis.com/kaggle-data-sets/2483929/4213460/bundle/archive.zip?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=gcp-kaggle-com%40kaggle-161607.iam.gserviceaccount.com%2F20230901%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20230901T073335Z&X-Goog-Expires=259200&X-Goog-SignedHeaders=host&X-Goog-Signature=6af2ef1129f3bb2d24cd411b35f9ec6363172c815bf70bbf220a8fd708795e4789464661a3aee1cba6fb454c2290bb698e7c84d0e12e36021558ea9690a99eb9220e04238fe82596fad869590f69c7e6f800e5df588d5c10acd3a205a84926c20eefe6c511be4ed3ab641fe99a2838e98d0e70f1131f96f292fcb2561c5a9c9903d11295b23a078bef22acb0e0c7e24b9aef0cd97249cb48ace1d29a1750769865a774dae5a706763e630a02ec4e912522cddf9e1ed365fb134bb6df498d04f7daf0a31b5911e2d575740d668d687136621aaaab58a5cc6294edb7b845e4cdfeacb758f212b34db34cf1b6b88325446da6d4f5b3c9ae14984655d5984ce6a047'
-
+    url = 'https://storage.googleapis.com/kaggle-data-sets/2483929/4213460/bundle/archive.zip'
     # Set the save location for the dataset
     save_location = fsc22_path
 
@@ -81,7 +80,8 @@ def rename_source_files(src_path):
         for i in range(fold - 1, len(audio_file_list), folds + skip):
             audio_file = audio_file_list[i]
             label = audio_file.split('_')[0]
-            if label == '16': continue
+            if label == '16':
+                continue
             if int(label) > 16:
                 label = str(int(label) - 1)
             index = audio_file.split('_')[1].split('.')[0]
@@ -124,7 +124,7 @@ def create_dataset(src_path, fsc22_dst_path):
             sound = wavio.read(wav_file).data.T[0]
             # start = sound.nonzero()[0].min()
             # end = sound.nonzero()[0].max()
-            # sound = sound[start: end + 1]  # Remove silent sections
+            # sound = sound[start: end + 1] # Remove silent sections
             label = int(os.path.splitext(wav_file)[0].split('-')[-1])
             fsc22_sounds.append(sound)
             fsc22_labels.append(label)
