@@ -32,7 +32,7 @@ def parse():
     #Test data
     opt.nCrops = 10
 
-    opt.augmentation_data = {"time_stretch": 0.6, "pitch_shift": -2}
+    opt.augmentation_data = {"time_stretch": 0.8, "pitch_shift": 1.5}
 
     opt.class_labels = ["Fire", "Rain", "Thunderstorm", "Waterdrops", "Wind", "Silence", "Tree Falling",
                         "Helicopter", "Vehicle Engine", "Axe", "Chainsaw", "Generator", "Handsaw", "Firework",

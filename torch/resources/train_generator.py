@@ -1,9 +1,9 @@
 import os
 import random
 import sys
+import copy
 
 import numpy as np
-import soundfile as sf
 import librosa
 
 sys.path.append(os.getcwd())
@@ -89,30 +89,32 @@ class Generator:
 
         return sound
 
-def preprocess_dataset(train_sounds, train_labels, options, temp_path):
-    sounds = train_sounds
-    labels = train_labels
+def preprocess_dataset(train_sounds, train_labels, options):
+    sounds = copy.deepcopy(train_sounds)
+    labels = copy.deepcopy(train_labels)
 
-    for i, audio_data in enumerate(train_sounds):
-        sf.write(temp_path, audio_data, options.sr)
-        sound_wave, sample_rate = librosa.load(temp_path)
+    norm = u.normalize(32768.0)
+    norm2 = u.normalize(1/32768.0)
+    for i in range(0, len(train_sounds)):
+        audio_data = train_sounds[i]
+        audio = norm(audio_data)
+
         for k, v in options.augmentation_data.items():
             if k == "time_stretch":
-                stretched_audio_data = librosa.effects.time_stretch(sound_wave, rate=v)
+                stretched_audio_data = librosa.effects.time_stretch(audio, rate=v)
                 stretched_sound = np.array(stretched_audio_data)
-                sounds.append(stretched_sound)
+                sounds.append(norm2(stretched_sound))
                 labels.append(train_labels[i])
             elif k == "pitch_shift":
-                shifted_audio_data = librosa.effects.pitch_shift(sound_wave, sr=sample_rate, n_steps=v)
+                shifted_audio_data = librosa.effects.pitch_shift(audio, sr=options.sr, n_steps=v)
                 shifted_sound = np.array(shifted_audio_data)
-                sounds.append(shifted_sound)
+                sounds.append(norm2(shifted_sound))
                 labels.append(train_labels[i])
             else:
                 print("Invalid augmentation function")
-        os.remove(temp_path)
+        sounds[i] = norm2(audio)
 
-    sounds = np.asarray(sounds)
-    labels = np.asarray(labels)
+    sounds = list(map(lambda x: x.astype(np.float64), sounds))
     return sounds, labels
 
 def setup(opt, split):
@@ -126,8 +128,7 @@ def setup(opt, split):
             train_sounds.extend(sounds)
             train_labels.extend(labels)
 
-    preprocessed_sounds, preprocessed_labels = preprocess_dataset(train_sounds, train_labels, opt,
-                                                                  os.path.join(opt.data, opt.dataset, "temp.wav"))
+    preprocessed_sounds, preprocessed_labels = preprocess_dataset(train_sounds, train_labels, opt)
     trainGen = Generator(preprocessed_sounds, preprocessed_labels, opt)
-
+    print("* {} data ready to train the model".format(len(preprocessed_sounds)))
     return trainGen
