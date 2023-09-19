@@ -264,51 +264,57 @@ if __name__ == '__main__':
     opt = opts.parse()
     opt.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(opt.device)
-    valid_training_type = False
-    while not valid_training_type:
-        train_type = input('Enter an option: \n1. Re-Training\n2. Training from Scratch\n:')
-        if train_type in ['1', '2']:
-            opt.retrain = True if train_type == '1' else False
-            valid_training_type = True
 
-    valid_path = False
-    while not valid_path:
-        model_path = input("Enter your pruned model path OR keep it blank to train the base ACDNet model\n:")
-        opt.model_path = "ACDNet" if model_path == '' else model_path
-        if model_path == '':
-            opt.model_path = "ACDNet"
-            print('ACDNet base model will be trained.')
-            valid_path = True
+    opt.retrain = False
+    # valid_training_type = False
+    # while not valid_training_type:
+    #     train_type = input('Enter an option: \n1. Re-Training\n2. Training from Scratch\n:')
+    #     if train_type in ['1', '2']:
+    #         opt.retrain = True if train_type == '1' else False
+    #         valid_training_type = True
 
-        else:
-            file_paths = glob.glob(os.path.join(os.getcwd(), model_path))
-            if len(file_paths) > 0 and os.path.isfile(file_paths[0]):
-                state = torch.load(file_paths[0], map_location=opt.device)
-                opt.model_path = file_paths[0]
-                print('Model has been found at: {}'.format(opt.model_path))
-                valid_path = True
+    opt.model_path = "ACDNet"
+    print('ACDNet base model will be trained.')
+    # valid_path = False
+    # while not valid_path:
+    #     model_path = input("Enter your pruned model path OR keep it blank to train the base ACDNet model\n:")
+    #     opt.model_path = "ACDNet" if model_path == '' else model_path
+    #     if model_path == '':
+    #         opt.model_path = "ACDNet"
+    #         print('ACDNet base model will be trained.')
+    #         valid_path = True
 
-    valid_model_name = False
-    while not valid_model_name:
-        model_name = input('Enter a name that will be used to save the trained model: ')
-        if model_name != '':
-            opt.model_name = model_name
-            valid_model_name = True
+        # else:
+        #     file_paths = glob.glob(os.path.join(os.getcwd(), model_path))
+        #     if len(file_paths) > 0 and os.path.isfile(file_paths[0]):
+        #         state = torch.load(file_paths[0], map_location=opt.device)
+        #         opt.model_path = file_paths[0]
+        #         print('Model has been found at: {}'.format(opt.model_path))
+        #         valid_path = True
 
-    valid_fold = False
-    split = None
-    while not valid_fold:
-        fold = input(
-            "Which fold do you want your model to be Validated:\n"
-            " 0. 5-Fold Cross Validation\n"
-            " 1. Fold-1\n"
-            " 2. Fold-2\n"
-            " 3. Fold-3\n"
-            " 4. Fold-4\n"
-            " 5. Fold-5\n :")
-        if fold in ['0', '1', '2', '3', '4', '5']:
-            split = int(fold)
-            valid_fold = True
+    opt.model_name = "Augmented_Model_mix2_ps_ts"
+    # valid_model_name = False
+    # while not valid_model_name:
+    #     model_name = input('Enter a name that will be used to save the trained model: ')
+    #     if model_name != '':
+    #         opt.model_name = model_name
+    #         valid_model_name = True
+
+    split = 1
+    # valid_fold = False
+    # split = None
+    # while not valid_fold:
+    #     fold = input(
+    #         "Which fold do you want your model to be Validated:\n"
+    #         " 0. 5-Fold Cross Validation\n"
+    #         " 1. Fold-1\n"
+    #         " 2. Fold-2\n"
+    #         " 3. Fold-3\n"
+    #         " 4. Fold-4\n"
+    #         " 5. Fold-5\n :")
+    #     if fold in ['0', '1', '2', '3', '4', '5']:
+    #         split = int(fold)
+    #         valid_fold = True
 
     if split == 0:
         # -- Run for all splits
