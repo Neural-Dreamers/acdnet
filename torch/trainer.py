@@ -254,7 +254,7 @@ class Trainer:
                 os.remove(old_model)
             self.bestAcc = acc
             self.bestAccEpoch = epochIdx + 1
-            torch.save({'weight': net.state_dict(), 'config': net.ch_config},
+            torch.save({'weight': net.state_dict()},
                        folder_name.format(pwd, self.opt.model_name.lower(), self.opt.split))
 
 
