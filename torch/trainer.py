@@ -54,7 +54,7 @@ class Trainer:
             if len(file_paths) > 0 and os.path.isfile(file_paths[0]):
                 state = torch.load(file_paths[0], map_location=self.opt.device)
                 net = models.GetACDNetModel(channel_config=state['config']).to(self.opt.device)
-                net = nn.DataParallel(net)
+                # net = nn.DataParallel(net)
                 if self.opt.retrain:
                     net.load_state_dict(state['weight'])
                 print('Model Loaded')
@@ -63,7 +63,7 @@ class Trainer:
                 exit()
         else:
             net = models.GetACDNetModel().to(self.opt.device)
-            net = nn.DataParallel(net)
+            # net = nn.DataParallel(net)
             print('ACDNet model has been prepared for training')
 
         calc.summary(net, (1, 1, opt.inputLength))
@@ -75,6 +75,8 @@ class Trainer:
         lossFunc = torch.nn.KLDivLoss(reduction='batchmean')
         optimizer = optim.SGD(net.parameters(), lr=self.opt.LR, weight_decay=self.opt.weightDecay,
                               momentum=self.opt.momentum, nesterov=True)
+
+        net = nn.DataParallel(net)
 
         metrics = {}
 
