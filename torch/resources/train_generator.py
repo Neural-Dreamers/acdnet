@@ -2,8 +2,10 @@ import os
 import random
 import sys
 import copy
+import math
 
 import numpy as np
+import soundfile as sf
 import librosa
 
 sys.path.append(os.getcwd())
@@ -20,7 +22,6 @@ class Generator:
         self.data = [(samples[i], labels[i]) for i in range(0, len(samples))]
         self.opt = options
         self.batch_size = options.batchSize
-        self.preprocess_funcs = self.preprocess_setup()
 
     def __len__(self):
         # Denotes the number of batches per epoch
@@ -34,49 +35,32 @@ class Generator:
         batchX = np.expand_dims(batchX, axis=3)
         return batchX, batchY
 
+    def getItems(self):
+        n_batches = math.ceil(len(self.data) / self.opt.batchSize)
+        random.shuffle(self.data)
+        return [self.__getitem__(i) for i in range(n_batches)]
+
     def generate_batch(self, batchIndex):
-        # Generates data containing batch_size samples
-        sounds = []
-        labels = []
-
-        selected = []
-
-        for i in range(self.batch_size*2):
-            # Training phase of BC learning
-            # Select two training examples
-            while True:
-                ind1 = random.randint(0, len(self.data) - 1)
-                ind2 = random.randint(0, len(self.data) - 1)
-
-                sound1, label1 = self.data[ind1]
-                sound2, label2 = self.data[ind2]
-                if label1 != label2 and "{}{}".format(ind1, ind2) not in selected:
-                    selected.append("{}{}".format(ind1, ind2))
-                    break
-            sound1 = self.preprocess(sound1)
-            sound2 = self.preprocess(sound2)
-
-            # Mix two examples
-            r = np.array(random.random())
-            sound = u.mix(sound1, sound2, r, self.opt.sr).astype(np.float32)
-            eye = np.eye(self.opt.nClasses)
-            label = (eye[label1 - 1] * r + eye[label2-1] * (1 - r)).astype(np.float32)
-
-            # For stronger augmentation
-            sound = u.random_gain(6)(sound).astype(np.float32)
-
-            sounds.append(sound)
-            labels.append(label)
+        n_batches = math.ceil(len(self.data) / self.opt.batchSize)
+        sounds, labels = zip(*(self.data[batchIndex * self.opt.batchSize:]
+                               if (n_batches - 1) == batchIndex
+                               else self.data[
+                                    batchIndex * self.opt.batchSize:(batchIndex + 1) * self.opt.batchSize]))
 
         sounds = np.asarray(sounds)
         labels = np.asarray(labels)
-
         return sounds, labels
+
+class Preprocessor:
+    def __init__(self, options):
+        random.seed(42)
+        self.opt = options
+        self.preprocess_funcs = self.preprocess_setup()
 
     def preprocess_setup(self):
         funcs = []
-        if self.opt.strongAugment:
-            funcs += [u.random_scale(1.25)]
+        # if self.opt.strongAugment:
+        # funcs += [u.random_scale(1.25)]
 
         funcs += [u.padding(self.opt.inputLength // 2),
                   u.random_crop(self.opt.inputLength),
@@ -90,6 +74,48 @@ class Generator:
         return sound
 
 def preprocess_dataset(train_sounds, train_labels, options):
+    preprocessor = Preprocessor(options)
+    train_sounds, train_labels = pitch_shift_and_time_stretch(train_sounds, train_labels, options)
+
+    sounds = []
+    labels = []
+
+    selected = []
+
+    for i in range(len(train_sounds) * options.mixup_factor):
+        while True:
+            ind1 = random.randint(0, len(train_sounds) - 1)
+            ind2 = random.randint(0, len(train_sounds) - 1)
+
+            sound1, label1 = train_sounds[ind1], train_labels[ind1]
+            sound2, label2 = train_sounds[ind2], train_labels[ind2]
+            if label1 != label2 and "{}{}".format(ind1, ind2) not in selected:
+                selected.append("{}{}".format(ind1, ind2))
+                break
+        sound1 = preprocessor.preprocess(sound1)
+        sound2 = preprocessor.preprocess(sound2)
+
+        # Mix two examples
+        r = np.array(random.random())
+        sound = u.mix(sound1, sound2, r, options.sr).astype(np.float32)
+        eye = np.eye(options.nClasses)
+        label = (eye[label1 - 1] * r + eye[label2 - 1] * (1 - r)).astype(np.float32)
+
+        # For stronger augmentation
+        # sound = u.random_gain(6)(sound).astype(np.float32)
+
+        sounds.append(sound)
+        labels.append(label)
+
+        # Save mixed and preprocessed audio file
+        # lab = list(zip(*sorted([(i, v) for i, v in enumerate(label, 1) if v>0], key=lambda x:x[1], reverse=True)))[0]
+        # filename = '{}_{}_{}.wav'.format(lab[0], lab[1],i)
+        # sf.write(os.path.join("D:\\ACADEMIC\\FYP\\acdnet\\datasets\\fsc22\\generated_sounds", filename), sound,
+        #          options.sr)
+
+    return sounds, labels
+
+def pitch_shift_and_time_stretch(train_sounds, train_labels, options):
     sounds = copy.deepcopy(train_sounds)
     labels = copy.deepcopy(train_labels)
 
@@ -118,6 +144,7 @@ def preprocess_dataset(train_sounds, train_labels, options):
     return sounds, labels
 
 def setup(opt, split):
+    print("\n* Setting up the training dataset...")
     dataset = np.load(os.path.join(opt.data, opt.dataset, 'wav{}.npz'.format(opt.sr // 1000)), allow_pickle=True);
     train_sounds = []
     train_labels = []
@@ -128,7 +155,15 @@ def setup(opt, split):
             train_sounds.extend(sounds)
             train_labels.extend(labels)
 
-    preprocessed_sounds, preprocessed_labels = preprocess_dataset(train_sounds, train_labels, opt)
-    trainGen = Generator(preprocessed_sounds, preprocessed_labels, opt)
-    print("* {} data ready to train the model".format(len(preprocessed_sounds)))
+    training_data_path = os.path.join(opt.data, opt.dataset, 'training_data.npz')
+    mixed_sounds, mixed_labels = [], []
+    if not os.path.exists(training_data_path):
+        mixed_sounds, mixed_labels = preprocess_dataset(train_sounds, train_labels, opt)
+        training_data = {"sounds":mixed_sounds, "labels":mixed_labels}
+        np.savez(training_data_path, **training_data)
+    else:
+        prepared_data = np.load(training_data_path, allow_pickle=True)
+        mixed_sounds, mixed_labels = prepared_data["sounds"], prepared_data["labels"]
+    trainGen = Generator(mixed_sounds, mixed_labels, opt)
+    print("* {} data ready to train the model".format(len(mixed_sounds)))
     return trainGen
