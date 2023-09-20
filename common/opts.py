@@ -14,7 +14,7 @@ def parse():
     opt = parser.parse_args()
 
     #Leqarning settings
-    opt.batchSize = 32
+    opt.batchSize = 128
     opt.weightDecay = 5e-4
     opt.momentum = 0.9
     opt.nEpochs = 2000
