@@ -75,7 +75,7 @@ class Preprocessor:
 
 def preprocess_dataset(train_sounds, train_labels, options):
     preprocessor = Preprocessor(options)
-    train_sounds, train_labels = pitch_shift_and_time_stretch(train_sounds, train_labels, options)
+    # train_sounds, train_labels = pitch_shift_and_time_stretch(train_sounds, train_labels, options)
 
     sounds = []
     labels = []

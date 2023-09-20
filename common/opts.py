@@ -14,7 +14,7 @@ def parse():
     opt = parser.parse_args()
 
     #Leqarning settings
-    opt.batchSize = 260
+    opt.batchSize = 256
     opt.weightDecay = 5e-4
     opt.momentum = 0.9
     opt.nEpochs = 2000
@@ -33,7 +33,7 @@ def parse():
     opt.nCrops = 10
 
     opt.augmentation_data = {"time_stretch": 0.8, "pitch_shift": 1.5}
-    opt.mixup_factor = 2
+    opt.mixup_factor = 4
 
     opt.class_labels = ["Fire", "Rain", "Thunderstorm", "Waterdrops", "Wind", "Silence", "Tree Falling",
                         "Helicopter", "Vehicle Engine", "Axe", "Chainsaw", "Generator", "Handsaw", "Firework",
