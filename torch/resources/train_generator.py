@@ -41,7 +41,7 @@ class Generator:
 
         selected = []
 
-        for i in range(self.batch_size*2):
+        for i in range(self.batch_size):
             # Training phase of BC learning
             # Select two training examples
             while True:
