@@ -5,6 +5,8 @@ import copy
 
 import numpy as np
 import librosa
+import torch
+import time
 
 sys.path.append(os.getcwd())
 sys.path.append(os.path.join(os.getcwd(), 'common'))
@@ -27,12 +29,25 @@ class Generator:
         return int(np.floor(len(self.data) / self.batch_size))
         # return len(self.samples);
 
+    def __get_items__(self, batches):
+        device = torch.device("cuda:0")
+        batchesX = []
+        batchesY = []
+
+        for i in range (batches):
+            batchX, batchY = self.__getitem__(i)
+            batchesX.append(batchX)
+            batchesY.append(batchY)
+
+        return torch.stack(batchesX).to(device), torch.stack(batchesY).to(device)
+
     def __getitem__(self, batchIndex):
         # Generate one batch of data
         batchX, batchY = self.generate_batch(batchIndex)
         batchX = np.expand_dims(batchX, axis=1)
         batchX = np.expand_dims(batchX, axis=3)
-        return batchX, batchY
+
+        return torch.tensor(np.moveaxis(batchX, 3, 1)), torch.tensor(batchY)
 
     def generate_batch(self, batchIndex):
         # Generates data containing batch_size samples
@@ -89,33 +104,33 @@ class Generator:
 
         return sound
 
-def preprocess_dataset(train_sounds, train_labels, options):
-    sounds = copy.deepcopy(train_sounds)
-    labels = copy.deepcopy(train_labels)
-
-    norm = u.normalize(32768.0)
-    norm2 = u.normalize(1/32768.0)
-    for i in range(0, len(train_sounds)):
-        audio_data = train_sounds[i]
-        audio = norm(audio_data)
-
-        for k, v in options.augmentation_data.items():
-            if k == "time_stretch":
-                stretched_audio_data = librosa.effects.time_stretch(audio, rate=v)
-                stretched_sound = np.array(stretched_audio_data)
-                sounds.append(norm2(stretched_sound))
-                labels.append(train_labels[i])
-            elif k == "pitch_shift":
-                shifted_audio_data = librosa.effects.pitch_shift(audio, sr=options.sr, n_steps=v)
-                shifted_sound = np.array(shifted_audio_data)
-                sounds.append(norm2(shifted_sound))
-                labels.append(train_labels[i])
-            else:
-                print("Invalid augmentation function")
-        sounds[i] = norm2(audio)
-
-    sounds = list(map(lambda x: x.astype(np.float64), sounds))
-    return sounds, labels
+# def preprocess_dataset(train_sounds, train_labels, options):
+#     sounds = copy.deepcopy(train_sounds)
+#     labels = copy.deepcopy(train_labels)
+#
+#     norm = u.normalize(32768.0)
+#     norm2 = u.normalize(1/32768.0)
+#     for i in range(0, len(train_sounds)):
+#         audio_data = train_sounds[i]
+#         audio = norm(audio_data)
+#
+#         for k, v in options.augmentation_data.items():
+#             if k == "time_stretch":
+#                 stretched_audio_data = librosa.effects.time_stretch(audio, rate=v)
+#                 stretched_sound = np.array(stretched_audio_data)
+#                 sounds.append(norm2(stretched_sound))
+#                 labels.append(train_labels[i])
+#             elif k == "pitch_shift":
+#                 shifted_audio_data = librosa.effects.pitch_shift(audio, sr=options.sr, n_steps=v)
+#                 shifted_sound = np.array(shifted_audio_data)
+#                 sounds.append(norm2(shifted_sound))
+#                 labels.append(train_labels[i])
+#             else:
+#                 print("Invalid augmentation function")
+#         sounds[i] = norm2(audio)
+#
+#     sounds = list(map(lambda x: x.astype(np.float64), sounds))
+#     return sounds, labels
 
 def setup(opt, split):
     dataset = np.load(os.path.join(opt.data, opt.dataset, 'wav{}.npz'.format(opt.sr // 1000)), allow_pickle=True);
@@ -128,7 +143,6 @@ def setup(opt, split):
             train_sounds.extend(sounds)
             train_labels.extend(labels)
 
-    preprocessed_sounds, preprocessed_labels = preprocess_dataset(train_sounds, train_labels, opt)
-    trainGen = Generator(preprocessed_sounds, preprocessed_labels, opt)
-    print("* {} data ready to train the model".format(len(preprocessed_sounds)))
+    trainGen = Generator(train_sounds, train_labels, opt)
+    print("* {} data ready to train the model".format(len(train_sounds)))
     return trainGen

@@ -89,11 +89,12 @@ class Trainer:
             running_loss = 0.0
             running_acc = 0.0
             n_batches = math.ceil(len(self.trainGen.data) / self.opt.batchSize)
+            X, Y = self.trainGen.__get_items__(n_batches)
             for batchIdx in range(n_batches):
                 # with torch.no_grad():
-                x, y = self.trainGen.__getitem__(batchIdx)
-                x = torch.tensor(np.moveaxis(x, 3, 1)).to(self.opt.device)
-                y = torch.tensor(y).to(self.opt.device)
+                # x, y = self.trainGen.__getitem__(batchIdx)
+                x = X[batchIdx]
+                y = Y[batchIdx]
                 # zero the parameter gradients
                 optimizer.zero_grad()
 
