@@ -76,7 +76,7 @@ class Trainer:
         optimizer = optim.SGD(net.parameters(), lr=self.opt.LR, weight_decay=self.opt.weightDecay,
                               momentum=self.opt.momentum, nesterov=True)
 
-        net = nn.DataParallel(net)
+        # net = nn.DataParallel(net)
 
         metrics = {}
 
@@ -255,7 +255,7 @@ class Trainer:
                 os.remove(old_model)
             self.bestAcc = acc
             self.bestAccEpoch = epochIdx + 1
-            torch.save({'weight': net.state_dict()},
+            torch.save({'weight':net.state_dict(), 'config':net.ch_config},
                        folder_name.format(pwd, self.opt.model_name.lower(), self.opt.split))
 
 
