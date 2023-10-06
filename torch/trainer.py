@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 
 import numpy as np
+import pandas as pd
 import torch.optim as optim
 
 import torch
@@ -132,7 +133,7 @@ class Trainer:
         total_time_taken = time.time() - train_start_time
         print("Execution finished in: {}".format(u.to_hms(total_time_taken)))
 
-        self.__save_acc_loss_plot(metrics)
+        self.__save_acc_loss(metrics)
 
     def load_test_data(self):
         data = np.load(os.path.join(self.opt.data, self.opt.dataset,
@@ -201,7 +202,7 @@ class Trainer:
         sys.stdout.write(line)
         sys.stdout.flush()
 
-    def __save_acc_loss_plot(self, metrics):
+    def __save_acc_loss(self, metrics):
         # Extract time, accuracies, and losses from the metrics dictionary
         epochs = list(metrics.keys())
         tr_acc = [entry['tr_acc'] for entry in metrics.values()]
@@ -209,21 +210,35 @@ class Trainer:
         val_acc = [entry['val_acc'] for entry in metrics.values()]
         val_loss = [entry['val_loss'] for entry in metrics.values()]
 
+        accuracy_matrices_path = os.path.join(os.getcwd(), 'torch\\metrics\\accuracy_matrices')
+
+        self.__save_acc_loss_plot(epochs, tr_acc, tr_loss, val_acc, val_loss, accuracy_matrices_path)
+        self.__save_acc_loss_csv(epochs, tr_acc, tr_loss, val_acc, val_loss, accuracy_matrices_path)
+
+    def __save_acc_loss_plot(self, epochs, tr_acc, tr_loss, val_acc, val_loss, save_path):
+        f = int(input('Enter save plot frequency of metrics: '))
+
+        save_epochs = [epochs[0]] + [epochs[i] for i in range(f - 1, self.opt.nEpochs, f)]
+        save_tr_acc = [tr_acc[0]] + [tr_acc[i] for i in range(f - 1, self.opt.nEpochs, f)]
+        save_tr_loss = [tr_loss[0]] + [tr_loss[i] for i in range(f - 1, self.opt.nEpochs, f)]
+        save_val_acc = [val_acc[0]] + [val_acc[i] for i in range(f - 1, self.opt.nEpochs, f)]
+        save_val_loss = [val_loss[0]] + [val_loss[i] for i in range(f - 1, self.opt.nEpochs, f)]
+
         # Create a figure and axis
         fig, ax1 = plt.subplots()
 
         # Plot accuracy lines
         ax1.set_xlabel('Epochs')
         ax1.set_ylabel('Accuracy', color='black')
-        ax1.plot(epochs, tr_acc, color='#800000', marker='o', label='Training Accuracy')
-        ax1.plot(epochs, val_acc, color='#000075', marker='x', label='Validation Accuracy ')
+        ax1.plot(save_epochs, save_tr_acc, color='#800000', marker='o', label='Training Accuracy')
+        ax1.plot(save_epochs, save_val_acc, color='#000075', marker='x', label='Validation Accuracy')
         ax1.tick_params(axis='y', labelcolor='black')
 
         # Create a second y-axis for loss lines
         ax2 = ax1.twinx()  # Share the same x-axis
         ax2.set_ylabel('Loss', color='black')
-        ax2.plot(epochs, tr_loss, color='#3cb44b', marker='s', label='Training Loss')
-        ax2.plot(epochs, val_loss, color='#f58231', marker='^', label='Validation Loss')
+        ax2.plot(save_epochs, save_tr_loss, color='#3cb44b', marker='s', label='Training Loss')
+        ax2.plot(save_epochs, save_val_loss, color='#f58231', marker='^', label='Validation Loss')
         ax2.tick_params(axis='y', labelcolor='black')
 
         # Add a legend
@@ -234,17 +249,33 @@ class Trainer:
         # Set a title
         plt.title('Accuracy and Loss Over Epochs')
 
-        accuracy_matrices_path = os.path.join(os.getcwd(), 'torch\\metrics\\accuracy_matrices')
-        curr_datetime = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
+        filename = f'{self.opt.model_name.lower()}-training_metrics_plot.png'
 
-        filename = f'training_metrics-{format(curr_datetime)}.png'
-
-        if not os.path.exists(accuracy_matrices_path):
-            os.makedirs(accuracy_matrices_path)
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
 
         # Save the plot to the specified folder
-        save_path = os.path.join(accuracy_matrices_path, filename)
-        plt.savefig(save_path, bbox_inches='tight')
+        destination = os.path.join(save_path, filename)
+        plt.savefig(destination, bbox_inches='tight')
+
+    def __save_acc_loss_csv(self, epochs, tr_acc, tr_loss, val_acc, val_loss, save_path):
+        df = pd.DataFrame()
+
+        filename = f'{self.opt.model_name.lower()}-full_training_metrics.csv'
+
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
+
+        # Save the plot to the specified folder
+        destination = os.path.join(save_path, filename)
+
+        df['epochs'] = epochs
+        df['tr_loss'] = tr_loss
+        df['tr_acc'] = tr_acc
+        df['val_loss'] = val_loss
+        df['val_acc'] = val_acc
+
+        df.to_csv(destination, index=False)
 
     def __save_model(self, acc, epochIdx, net):
         if acc > self.bestAcc:
