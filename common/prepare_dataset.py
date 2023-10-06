@@ -19,7 +19,7 @@ import shutil
 
 def main():
     mainDir = os.getcwd()
-    fsc22_path = os.path.join(mainDir, 'datasets/fsc22')
+    fsc22_path = os.path.join(mainDir, 'datasets\\fsc22')
 
     if not os.path.exists(fsc22_path):
         os.mkdir(fsc22_path)
@@ -27,7 +27,7 @@ def main():
     sr_list = [44100, 20000]
 
     # Set the URL of the FSC-22 dataset
-    # url = 'https://storage.googleapis.com/kaggle-data-sets/2483929/4213460/bundle/archive.zip'
+    url = 'https://storage.googleapis.com/kaggle-data-sets/2483929/4213460/bundle/archive.zip'
     # Set the save location for the dataset
     save_location = fsc22_path
 
@@ -35,9 +35,14 @@ def main():
     # wget.download(url, save_location)
 
     # Unzip the dataset
-    # zip_file = "archive.zip"
-    # with zipfile.ZipFile(fsc22_path + "\\" + zip_file, "r") as zip_ref:
-    #     zip_ref.extractall(save_location)
+    zip_file = "archive.zip"
+    with zipfile.ZipFile(fsc22_path + "\\" + zip_file, "r") as zip_ref:
+        zip_ref.extractall(save_location)
+
+    # Unzip the test dataset
+    zip_file = "test-archive.zip"
+    with zipfile.ZipFile(fsc22_path + "\\" + zip_file, "r") as zip_ref:
+        zip_ref.extractall(save_location)
 
     # Remove the zip file
     # os.remove(zip_file)
@@ -45,7 +50,7 @@ def main():
     fsc22_master_path = os.path.join(fsc22_path, 'FSC-22-master')
 
     if not os.path.exists(fsc22_master_path):
-        shutil.copytree("/kaggle/input/fsc22-dataset/Audio Wise V1.0-20220916T202003Z-001", fsc22_master_path)
+        shutil.copytree(os.path.join(fsc22_path, 'Audio Wise V1.0-20220916T202003Z-001'), fsc22_master_path)
 
     fsc22_master_audio_path = os.path.join(fsc22_master_path, 'audio')
 
@@ -61,12 +66,21 @@ def main():
         convert_sr(os.path.join(fsc22_path, 'FSC-22-master', 'audio'),
                    os.path.join(fsc22_path, 'wav{}'.format(sr // 1000)),
                    sr)
+        convert_sr(os.path.join(fsc22_path, 'FSC-22-test'),
+                   os.path.join(fsc22_path, 'test-wav{}'.format(sr // 1000)),
+                   sr)
 
     # Create npz files
     for sr in sr_list:
         src_path = os.path.join(fsc22_path, 'wav{}'.format(sr // 1000))
 
         create_dataset(src_path, os.path.join(fsc22_path, 'wav{}.npz'.format(sr // 1000)))
+
+    # Create npz files for test dataset
+    for sr in sr_list:
+        src_path = os.path.join(fsc22_path, 'test-wav{}'.format(sr // 1000))
+
+        create_test_dataset(src_path, os.path.join(fsc22_path, 'test-wav{}.npz'.format(sr // 1000)))
 
 
 def rename_source_files(src_path):
@@ -133,6 +147,28 @@ def create_dataset(src_path, fsc22_dst_path):
         fsc22_dataset['fold{}'.format(fold)]['labels'] = fsc22_labels
 
     np.savez(fsc22_dst_path, **fsc22_dataset)
+
+
+def create_test_dataset(src_path, fsc22_test_dst_path):
+    print('* {} -> {}'.format(src_path, fsc22_test_dst_path))
+    fsc22_test_dataset = {'T': {}}
+
+    fsc22_test_sounds = []
+    fsc22_test_labels = []
+
+    for wav_file in sorted(glob.glob(os.path.join(src_path, '*.wav'))):
+        sound = wavio.read(wav_file).data.T[0]
+        # start = sound.nonzero()[0].min()
+        # end = sound.nonzero()[0].max()
+        # sound = sound[start: end + 1] # Remove silent sections
+        label = int(os.path.splitext(os.path.basename(wav_file))[0].split('_')[0])
+        fsc22_test_sounds.append(sound)
+        fsc22_test_labels.append(label)
+
+    fsc22_test_dataset['T']['sounds'] = fsc22_test_sounds
+    fsc22_test_dataset['T']['labels'] = fsc22_test_labels
+
+    np.savez(fsc22_test_dst_path, **fsc22_test_dataset)
 
 
 if __name__ == '__main__':

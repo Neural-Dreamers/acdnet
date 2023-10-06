@@ -28,6 +28,7 @@ def parse():
     opt.splits = [i for i in range(1, opt.nFolds + 1)]
     opt.sr = 20000
     opt.inputLength = 30225
+    opt.mixupFactor = 2
 
     #Test data
     opt.nCrops = 10

@@ -24,8 +24,6 @@ class ValGenerator:
         x, y = self.generate()
         x = np.expand_dims(x, axis=1)
         x = np.expand_dims(x, axis=3)
-        print(x.shape)
-        print(y.shape)
         return x, y
 
     def generate(self):

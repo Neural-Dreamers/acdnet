@@ -1,12 +1,9 @@
 import os
 import random
 import sys
-import copy
 
 import numpy as np
-import librosa
 import torch
-import time
 
 sys.path.append(os.getcwd())
 sys.path.append(os.path.join(os.getcwd(), 'common'))
@@ -56,32 +53,107 @@ class Generator:
 
         selected = []
 
-        for i in range(self.batch_size):
-            # Training phase of BC learning
-            # Select two training examples
-            while True:
-                ind1 = random.randint(0, len(self.data) - 1)
-                ind2 = random.randint(0, len(self.data) - 1)
+        if self.opt.mixupFactor == 2:
+            for i in range(self.batch_size):
+                # Training phase of BC learning
+                # Select two training examples
+                while True:
+                    ind1 = random.randint(0, len(self.data) - 1)
+                    ind2 = random.randint(0, len(self.data) - 1)
 
-                sound1, label1 = self.data[ind1]
-                sound2, label2 = self.data[ind2]
-                if label1 != label2 and "{}{}".format(ind1, ind2) not in selected:
-                    selected.append("{}{}".format(ind1, ind2))
-                    break
-            sound1 = self.preprocess(sound1)
-            sound2 = self.preprocess(sound2)
+                    sound1, label1 = self.data[ind1]
+                    sound2, label2 = self.data[ind2]
 
-            # Mix two examples
-            r = np.array(random.random())
-            sound = u.mix(sound1, sound2, r, self.opt.sr).astype(np.float32)
-            eye = np.eye(self.opt.nClasses)
-            label = (eye[label1 - 1] * r + eye[label2-1] * (1 - r)).astype(np.float32)
+                    if len({label1, label2}) == 2 and "{}-{}".format(ind1, ind2) not in selected:
+                        selected.append("{}-{}".format(ind1, ind2))
+                        break
+                sound1 = self.preprocess(sound1)
+                sound2 = self.preprocess(sound2)
 
-            # For stronger augmentation
-            sound = u.random_gain(6)(sound).astype(np.float32)
+                # Mix two examples
+                r = np.array(random.random())
+                sound = u.mix(sound1, sound2, r, self.opt.sr).astype(np.float32)
+                eye = np.eye(self.opt.nClasses)
+                label = (eye[label1 - 1] * r + eye[label2 - 1] * (1 - r) ).astype(np.float32)
 
-            sounds.append(sound)
-            labels.append(label)
+                # For stronger augmentation
+                sound = u.random_gain(6)(sound).astype(np.float32)
+
+                sounds.append(sound)
+                labels.append(label)
+        elif self.opt.mixupFactor == 3:
+            for i in range(self.batch_size):
+                # Training phase of BC learning
+                # Select two training examples
+                while True:
+                    ind1 = random.randint(0, len(self.data) - 1)
+                    ind2 = random.randint(0, len(self.data) - 1)
+                    ind3 = random.randint(0, len(self.data) - 1)
+
+                    sound1, label1 = self.data[ind1]
+                    sound2, label2 = self.data[ind2]
+                    sound3, label3 = self.data[ind3]
+
+                    if len({label1, label2, label3}) == 3 and "{}-{}-{}".format(ind1, ind2, ind3) not in selected:
+                        selected.append("{}-{}-{}".format(ind1, ind2, ind3))
+                        break
+                sound1 = self.preprocess(sound1)
+                sound2 = self.preprocess(sound2)
+                sound3 = self.preprocess(sound3)
+
+                # Mix three examples
+                r = np.array(random.random())
+                q = np.array(random.random())
+                mix_sound = u.mix(sound1, sound2, r, self.opt.sr).astype(np.float32)
+                sound = u.mix(mix_sound, sound3, q, self.opt.sr).astype(np.float32)
+                eye = np.eye(self.opt.nClasses)
+                label = (eye[label1 - 1] * r * q + eye[label2 - 1] * (1 - r) * q + eye[label3 - 1] * (1 - q)).astype(
+                    np.float32)
+
+                # For stronger augmentation
+                sound = u.random_gain(6)(sound).astype(np.float32)
+
+                sounds.append(sound)
+                labels.append(label)
+        elif self.opt.mixupFactor == 4:
+            for i in range(self.batch_size):
+                # Training phase of BC learning
+                # Select two training examples
+                while True:
+                    ind1 = random.randint(0, len(self.data) - 1)
+                    ind2 = random.randint(0, len(self.data) - 1)
+                    ind3 = random.randint(0, len(self.data) - 1)
+                    ind4 = random.randint(0, len(self.data) - 1)
+
+                    sound1, label1 = self.data[ind1]
+                    sound2, label2 = self.data[ind2]
+                    sound3, label3 = self.data[ind3]
+                    sound4, label4 = self.data[ind4]
+
+                    if len({label1, label2, label3, label4}) == 4 and "{}-{}-{}-{}".format(ind1, ind2, ind3, ind4) not in selected:
+                        selected.append("{}-{}-{}-{}".format(ind1, ind2, ind3, ind4))
+                        break
+                sound1 = self.preprocess(sound1)
+                sound2 = self.preprocess(sound2)
+                sound3 = self.preprocess(sound3)
+                sound4 = self.preprocess(sound4)
+
+                # Mix four examples
+                r = np.array(random.random())
+                q = np.array(random.random())
+                p = np.array(random.random())
+                mix_sound1 = u.mix(sound1, sound2, r, self.opt.sr).astype(np.float32)
+                mix_sound2 = u.mix(mix_sound1, sound3, q, self.opt.sr).astype(np.float32)
+                sound = u.mix(mix_sound2, sound4, p, self.opt.sr).astype(np.float32)
+                eye = np.eye(self.opt.nClasses)
+                label = (eye[label1 - 1] * r * q * p + eye[label2 - 1] * (1 - r) * q * p + eye[label3 - 1] * (1 - q) * p + eye[label4 - 1] * (1 - p)).astype(
+                    np.float32)
+
+                # For stronger augmentation
+                sound = u.random_gain(6)(sound).astype(np.float32)
+
+                sounds.append(sound)
+                labels.append(label)
 
         sounds = np.asarray(sounds)
         labels = np.asarray(labels)
@@ -103,34 +175,6 @@ class Generator:
             sound = f(sound)
 
         return sound
-
-# def preprocess_dataset(train_sounds, train_labels, options):
-#     sounds = copy.deepcopy(train_sounds)
-#     labels = copy.deepcopy(train_labels)
-#
-#     norm = u.normalize(32768.0)
-#     norm2 = u.normalize(1/32768.0)
-#     for i in range(0, len(train_sounds)):
-#         audio_data = train_sounds[i]
-#         audio = norm(audio_data)
-#
-#         for k, v in options.augmentation_data.items():
-#             if k == "time_stretch":
-#                 stretched_audio_data = librosa.effects.time_stretch(audio, rate=v)
-#                 stretched_sound = np.array(stretched_audio_data)
-#                 sounds.append(norm2(stretched_sound))
-#                 labels.append(train_labels[i])
-#             elif k == "pitch_shift":
-#                 shifted_audio_data = librosa.effects.pitch_shift(audio, sr=options.sr, n_steps=v)
-#                 shifted_sound = np.array(shifted_audio_data)
-#                 sounds.append(norm2(shifted_sound))
-#                 labels.append(train_labels[i])
-#             else:
-#                 print("Invalid augmentation function")
-#         sounds[i] = norm2(audio)
-#
-#     sounds = list(map(lambda x: x.astype(np.float64), sounds))
-#     return sounds, labels
 
 def setup(opt, split):
     dataset = np.load(os.path.join(opt.data, opt.dataset, 'wav{}.npz'.format(opt.sr // 1000)), allow_pickle=True);
