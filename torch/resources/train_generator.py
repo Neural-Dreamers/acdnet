@@ -176,6 +176,34 @@ class Generator:
 
         return sound
 
+# def preprocess_dataset(train_sounds, train_labels, options):
+#     sounds = copy.deepcopy(train_sounds)
+#     labels = copy.deepcopy(train_labels)
+#
+#     norm = u.normalize(32768.0)
+#     norm2 = u.normalize(1/32768.0)
+#     for i in range(0, len(train_sounds)):
+#         audio_data = train_sounds[i]
+#         audio = norm(audio_data)
+#
+#         for k, v in options.augmentation_data.items():
+#             if k == "time_stretch":
+#                 stretched_audio_data = librosa.effects.time_stretch(audio, rate=v)
+#                 stretched_sound = np.array(stretched_audio_data)
+#                 sounds.append(norm2(stretched_sound))
+#                 labels.append(train_labels[i])
+#             elif k == "pitch_shift":
+#                 shifted_audio_data = librosa.effects.pitch_shift(audio, sr=options.sr, n_steps=v)
+#                 shifted_sound = np.array(shifted_audio_data)
+#                 sounds.append(norm2(shifted_sound))
+#                 labels.append(train_labels[i])
+#             else:
+#                 print("Invalid augmentation function")
+#         sounds[i] = norm2(audio)
+#
+#     sounds = list(map(lambda x: x.astype(np.float64), sounds))
+#     return sounds, labels
+
 def setup(opt, split):
     dataset = np.load(os.path.join(opt.data, opt.dataset, 'wav{}.npz'.format(opt.sr // 1000)), allow_pickle=True);
     train_sounds = []
