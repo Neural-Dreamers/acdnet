@@ -93,12 +93,14 @@ class PruningTrainer:
             running_acc = 0.0;
             n_batches = math.ceil(len(self.trainGen.data)/self.opt.batchSize);
             net.train();
+            X, Y = self.trainGen.__get_items__(n_batches)
             for batch_idx in range(n_batches):
                 # with torch.no_grad():
-                x,y = self.trainGen.__getitem__(batch_idx)
-                x = torch.tensor(np.moveaxis(x, 3, 1)).to(self.device);
-                y = torch.tensor(y).to(self.device);
-
+                # x,y = self.trainGen.__getitem__(batch_idx)
+                # x = torch.tensor(np.moveaxis(x, 3, 1)).to(self.device);
+                # y = torch.tensor(y).to(self.device);
+                x = X[batch_idx]
+                y = Y[batch_idx]
                 # zero the parameter gradients
                 optimizer.zero_grad();
 

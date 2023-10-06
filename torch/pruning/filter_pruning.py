@@ -164,10 +164,13 @@ class PruningTrainer:
             print('Please provide optimizer to train_epoch', flush=True);
             exit();
         n_batches = math.ceil(len(self.trainGen.data)/self.opt.batchSize);
+        X, Y = self.trainGen.__get_items__(n_batches)
         for b_idx in range(n_batches):
-            x,y = self.trainGen.__getitem__(b_idx)
-            x = torch.tensor(np.moveaxis(x, 3, 1)).to(self.opt.device);
-            y = torch.tensor(y).to(self.opt.device);
+            # x,y = self.trainGen.__getitem__(b_idx)
+            # x = torch.tensor(np.moveaxis(x, 3, 1)).to(self.opt.device);
+            # y = torch.tensor(y).to(self.opt.device);
+            x = X[b_idx]
+            y = Y[b_idx]
             self.train_batch(optimizer, x, y, rank_filters);
 
     def validate(self):
