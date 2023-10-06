@@ -110,9 +110,8 @@ class Trainer:
 
     def __save_metrics(self, acc, loss, precision, recall, f1):
         metrics_path = os.path.join(os.getcwd(), 'torch\\metrics\\metric_values')
-
         curr_datetime = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
-        filename = f'metrics-{format(curr_datetime)}.txt'
+        filename = f'{self.opt.model_name.lower()}-metrics_final-{format(curr_datetime)}.txt'
 
         if not os.path.exists(metrics_path):
             os.makedirs(metrics_path)
@@ -136,8 +135,7 @@ class Trainer:
 
         confusion_matrix_path = os.path.join(os.getcwd(), 'torch\\metrics\\confusion_matrices')
         curr_datetime = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
-
-        filename = f'confusion_matrix-{format(curr_datetime)}.png'
+        filename = f'{self.opt.model_name.lower()}-confusion_matrix_final-{format(curr_datetime)}.png'
 
         if not os.path.exists(confusion_matrix_path):
             os.makedirs(confusion_matrix_path)
@@ -198,8 +196,7 @@ class Trainer:
 
         roc_auc_path = os.path.join(os.getcwd(), 'torch\\metrics\\roc_auc')
         curr_datetime = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
-
-        filename = f'roc_auc-{format(curr_datetime)}.png'
+        filename = f'{self.opt.model_name.lower()}-roc_auc_final-{format(curr_datetime)}.png'
 
         if not os.path.exists(roc_auc_path):
             os.makedirs(roc_auc_path)
@@ -243,20 +240,21 @@ if __name__ == '__main__':
         if len(file_paths) > 0 and os.path.isfile(file_paths[0]):
             state = torch.load(file_paths[0], map_location=opt.device)
             opt.model_path = file_paths[0]
+            opt.model_name = os.path.basename(opt.model_path).split(".")[0]
             print('Model has been found at: {}'.format(opt.model_path))
             valid_path = True
 
-    # valid_fold = False
-    # while not valid_fold:
-    #     fold = input(
-    #         "Select the fold on which the model was Validated:\n"
-    #         " 1. Fold-1\n"
-    #         " 2. Fold-2\n"
-    #         " 3. Fold-3\n"
-    #         " 4. Fold-4\n"
-    #         " 5. Fold-5\n :")
-    #     if fold in ['1', '2', '3', '4', '5']:
-    #         opt.split = int(fold)
-    #         valid_fold = True
+    valid_fold = False
+    while not valid_fold:
+        fold = input(
+            "Select the fold on which the model was Validated:\n"
+            " 1. Fold-1\n"
+            " 2. Fold-2\n"
+            " 3. Fold-3\n"
+            " 4. Fold-4\n"
+            " 5. Fold-5\n :")
+        if fold in ['1', '2', '3', '4', '5']:
+            opt.split = int(fold)
+            valid_fold = True
     trainer = Trainer(opt)
     trainer.TestModel()

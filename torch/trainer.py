@@ -249,7 +249,8 @@ class Trainer:
         # Set a title
         plt.title('Accuracy and Loss Over Epochs')
 
-        filename = f'{self.opt.model_name.lower()}-training_metrics_plot.png'
+        curr_datetime = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
+        filename = f'{self.opt.model_name.lower()}-training_metrics_plot-{format(curr_datetime)}.png'
 
         if not os.path.exists(save_path):
             os.makedirs(save_path)
@@ -261,7 +262,8 @@ class Trainer:
     def __save_acc_loss_csv(self, epochs, tr_acc, tr_loss, val_acc, val_loss, save_path):
         df = pd.DataFrame()
 
-        filename = f'{self.opt.model_name.lower()}-full_training_metrics.csv'
+        curr_datetime = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
+        filename = f'{self.opt.model_name.lower()}-full_training_metrics-{format(curr_datetime)}.csv'
 
         if not os.path.exists(save_path):
             os.makedirs(save_path)
