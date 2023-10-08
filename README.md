@@ -15,7 +15,7 @@ Environmental sound classification on the edge: A pipeline for deep acoustic net
 ## A. Training and Compressing ACDNet
 
 #### A.1 Prerequisits
-(pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118 wavio wget pydub librosa matplotlib seaborn soundfile)
+(pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118 wavio wget pydub librosa matplotlib seaborn soundfile pandas)
 1. Create `python 3.7+` development environment.
 2. Install `torch`.
 2. Install `wavio`. 
