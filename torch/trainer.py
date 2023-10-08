@@ -225,10 +225,11 @@ class Trainer:
         save_val_loss = [val_loss[0]] + [val_loss[i] for i in range(f - 1, self.opt.nEpochs, f)]
 
         # Create a figure and axis
+        plt.figure(figsize=(12, 10))
         fig, ax1 = plt.subplots()
 
         # Plot accuracy lines
-        ax1.set_xlabel('Epochs')
+        ax1.set_xlabel('Epochs', rotation=90)
         ax1.set_ylabel('Accuracy', color='black')
         ax1.plot(save_epochs, save_tr_acc, color='#800000', marker='o', label='Training Accuracy')
         ax1.plot(save_epochs, save_val_acc, color='#000075', marker='x', label='Validation Accuracy')
