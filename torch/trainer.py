@@ -217,22 +217,24 @@ class Trainer:
 
     def __save_acc_loss_plot(self, epochs, tr_acc, tr_loss, val_acc, val_loss, save_path):
         f = int(input('Enter save plot frequency of metrics: '))
-
-        save_epochs = [epochs[0]] + [epochs[i] for i in range(f - 1, self.opt.nEpochs, f)]
-        save_tr_acc = [tr_acc[0]] + [tr_acc[i] for i in range(f - 1, self.opt.nEpochs, f)]
-        save_tr_loss = [tr_loss[0]] + [tr_loss[i] for i in range(f - 1, self.opt.nEpochs, f)]
-        save_val_acc = [val_acc[0]] + [val_acc[i] for i in range(f - 1, self.opt.nEpochs, f)]
-        save_val_loss = [val_loss[0]] + [val_loss[i] for i in range(f - 1, self.opt.nEpochs, f)]
+        save_epochs = [epochs[i] for i in range(0, self.opt.nEpochs, f)] + [epochs[-1]]
+        save_tr_acc = [tr_acc[i] for i in range(0, self.opt.nEpochs, f)] + [tr_acc[-1]]
+        save_tr_loss = [tr_loss[i] for i in range(0, self.opt.nEpochs, f)] + [tr_loss[-1]]
+        save_val_acc = [val_acc[i] for i in range(0, self.opt.nEpochs, f)] + [val_acc[-1]]
+        save_val_loss = [val_loss[i] for i in range(0, self.opt.nEpochs, f)] + [val_loss[-1]]
 
         # Create a figure and axis
         fig, ax1 = plt.subplots()
+
+        fig.set_figheight(12)
+        fig.set_figwidth(24)
 
         # Plot accuracy lines
         ax1.set_xlabel('Epochs')
         ax1.set_ylabel('Accuracy', color='black')
         ax1.plot(save_epochs, save_tr_acc, color='#800000', marker='o', label='Training Accuracy')
         ax1.plot(save_epochs, save_val_acc, color='#000075', marker='x', label='Validation Accuracy')
-        ax1.tick_params(axis='y', labelcolor='black')
+        ax1.set_xticklabels(save_epochs, rotation=90)
 
         # Create a second y-axis for loss lines
         ax2 = ax1.twinx()  # Share the same x-axis
