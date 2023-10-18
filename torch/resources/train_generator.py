@@ -5,6 +5,13 @@ import sys
 import numpy as np
 import torch
 
+from sklearn.preprocessing import normalize
+
+import librosa.display
+
+import matplotlib.pyplot as plt
+from PIL import Image
+
 sys.path.append(os.getcwd())
 sys.path.append(os.path.join(os.getcwd(), 'common'))
 
@@ -31,7 +38,7 @@ class Generator:
         batchesX = []
         batchesY = []
 
-        for i in range (batches):
+        for i in range(batches):
             batchX, batchY = self.__getitem__(i)
             batchesX.append(batchX)
             batchesY.append(batchY)
@@ -74,12 +81,15 @@ class Generator:
                 r = np.array(random.random())
                 sound = u.mix(sound1, sound2, r, self.opt.sr).astype(np.float32)
                 eye = np.eye(self.opt.nClasses)
-                label = (eye[label1 - 1] * r + eye[label2 - 1] * (1 - r) ).astype(np.float32)
+                label = (eye[label1 - 1] * r + eye[label2 - 1] * (1 - r)).astype(np.float32)
 
                 # For stronger augmentation
                 sound = u.random_gain(6)(sound).astype(np.float32)
 
-                sounds.append(sound)
+                sound_mel_spect = compute_log_mel_spect(sound, self.opt.sr)
+                print(sound_mel_spect.shape)
+
+                sounds.append(sound_mel_spect)
                 labels.append(label)
         elif self.opt.mixupFactor == 3:
             for i in range(self.batch_size):
@@ -113,7 +123,9 @@ class Generator:
                 # For stronger augmentation
                 sound = u.random_gain(6)(sound).astype(np.float32)
 
-                sounds.append(sound)
+                sound_mel_spect = compute_log_mel_spect(sound, self.opt.sr)
+
+                sounds.append(sound_mel_spect)
                 labels.append(label)
         elif self.opt.mixupFactor == 4:
             for i in range(self.batch_size):
@@ -146,13 +158,16 @@ class Generator:
                 mix_sound2 = u.mix(mix_sound1, sound3, q, self.opt.sr).astype(np.float32)
                 sound = u.mix(mix_sound2, sound4, p, self.opt.sr).astype(np.float32)
                 eye = np.eye(self.opt.nClasses)
-                label = (eye[label1 - 1] * r * q * p + eye[label2 - 1] * (1 - r) * q * p + eye[label3 - 1] * (1 - q) * p + eye[label4 - 1] * (1 - p)).astype(
+                label = (eye[label1 - 1] * r * q * p + eye[label2 - 1] * (1 - r) * q * p + eye[label3 - 1] * (
+                            1 - q) * p + eye[label4 - 1] * (1 - p)).astype(
                     np.float32)
 
                 # For stronger augmentation
                 sound = u.random_gain(6)(sound).astype(np.float32)
 
-                sounds.append(sound)
+                sound_mel_spect = compute_log_mel_spect(sound, self.opt.sr)
+
+                sounds.append(sound_mel_spect)
                 labels.append(label)
 
         sounds = np.asarray(sounds)
@@ -175,6 +190,7 @@ class Generator:
             sound = f(sound)
 
         return sound
+
 
 # def preprocess_dataset(train_sounds, train_labels, options):
 #     sounds = copy.deepcopy(train_sounds)
@@ -218,3 +234,172 @@ def setup(opt, split):
     trainGen = Generator(train_sounds, train_labels, opt)
     print("* {} data ready to train the model".format(len(train_sounds)))
     return trainGen
+
+
+def compute_log_mel_spect(audio, sample_rate):
+    feature_spectrogram = generate_features(audio, sample_rate)
+    print(f'feature_spectrogram : {feature_spectrogram.shape}')
+    exit(0)
+    return feature_spectrogram
+    # Mel_spectrogram = librosa.feature.melspectrogram(y=audio, sr=sample_rate)
+    # mel_spectrogram_db = librosa.power_to_db(Mel_spectrogram)
+    # delta = librosa.feature.delta(mel_spectrogram_db)
+    # image = np.dstack((mel_spectrogram_db, delta))
+    # print(f'image : {image.shape}')
+    # img = Image.fromarray(image, 'RGB')
+    # img.save('test_1.png')
+    # log_ms = generate_features(audio, sample_rate)
+    # print(log_ms.shape)
+    # img = Image.fromarray(log_ms, 'RGB')
+    # img.save('new_out_2.png')
+    # exit(0)
+    # fig = plt.figure()
+    # canvas = fig.canvas
+    # fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
+    # ax = fig.gca()
+    # ax.axis('off')
+    #
+    # ps = librosa.feature.melspectrogram(y=audio, sr=sample_rate)
+    # ps_db = librosa.power_to_db(ps, ref=np.max)  # log-mel spectrogram (2d - [n_mels,t])
+    # librosa.display.specshow(ps_db, sr=sample_rate)
+    # fig.savefig('out1.png')
+    # plt.close(fig)
+    #
+    # print(ps_db.shape)
+    # delta = librosa.feature.delta(ps_db)  # delta (2d)
+    # delta2 = librosa.feature.delta(ps_db, order=2)  # delta-delta (2d)
+    # ps_db = np.expand_dims(ps_db, axis=-1)  # 3d ([n_mels,t,1])
+    # delta = np.expand_dims(delta, axis=-1)  # 3d
+    # delta2 = np.expand_dims(delta2, axis=-1)  # 3d
+    # final_map = np.concatenate([ps_db, delta, delta2], axis=-1)
+    # print(final_map.shape)
+    # resized_map = np.resize(final_map, [224, 224, 3])
+    # img = Image.fromarray(resized_map, 'RGB')
+    # img.save('out2.png')
+    # print(resized_map.shape)
+    # exit(0)
+    # librosa.display.specshow(log_ms, sr=sample_rate)
+    #
+    # canvas.draw()  # Draw the canvas, cache the renderer
+    #
+    # log_ms_flat = np.frombuffer(canvas.tostring_rgb(), dtype='uint8')  # (H * W * 3,)
+    # # NOTE: reversed converts (W, H) from get_width_height to (H, W)
+    # log_ms = log_ms_flat.reshape(*reversed(canvas.get_width_height()), 3)  # (H, W, 3)
+    # plt.close(fig)
+
+    # return log_ms
+
+
+def generate_features(y_cut, sr):
+    # my max audio file feature width
+    max_size = 1000
+
+    stft = padding(np.abs(librosa.stft(y=y_cut, n_fft=255, hop_length=512)), 128, max_size)
+    MFCCs = padding(librosa.feature.mfcc(y=y_cut, n_mfcc=128, sr=sr), 128, max_size)
+    spec_centroid = librosa.feature.spectral_centroid(y=y_cut, sr=sr)
+    chroma_stft = librosa.feature.chroma_stft(y=y_cut, sr=sr)
+    spec_bw = librosa.feature.spectral_bandwidth(y=y_cut, sr=sr)
+
+    # Now the padding part
+    image = np.array([padding(normalize(spec_bw), 1, max_size)]).reshape(1, max_size)
+    image = np.append(image, padding(normalize(spec_centroid), 1, max_size), axis=0)
+
+    # repeat the padded spec_bw, spec_centroid and chroma stft until they are stft and MFCC-sized
+    for i in range(0, 9):
+        image = np.append(image, padding(normalize(spec_bw), 1, max_size), axis=0)
+        image = np.append(image, padding(normalize(spec_centroid), 1, max_size), axis=0)
+        image = np.append(image, padding(normalize(chroma_stft), 12, max_size), axis=0)
+
+    image = np.dstack((image, np.abs(stft)))
+    image = np.dstack((image, MFCCs))
+
+    return image
+
+
+# def generate_features(y_cut, sr):
+    # max_size = 1000  # my max audio file feature width
+    # stft = librosa.stft(y_cut, n_fft=255, hop_length=512)
+    # print(f'stft : {stft.shape}')
+    # fig = plt.figure()
+    # ax = fig.add_subplot(1, 1, 1)
+    # fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
+    # librosa.display.specshow(stft, sr=sr)
+    # fig.savefig('stft.png')
+    # plt.close(fig)
+
+    # mel1 = librosa.feature.melspectrogram(y=y_cut, sr=sr)
+    # mel3 = librosa.feature.melspectrogram(y=y_cut, sr=sr)
+    # print(f'mel1 : {mel1.shape}')
+    # print(mel1)
+    # fig = plt.figure()
+    # ax = fig.add_subplot(1, 1, 1)
+    # fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
+    # librosa.display.specshow(mels, sr=sr)
+    # fig.savefig('mels.png')
+    # plt.close(fig)
+
+    # spec_centroid = librosa.feature.spectral_centroid(y=y_cut, sr=sr)
+    # print(f'spec_centroid : {spec_centroid.shape}')
+    #
+    # chroma_stft = librosa.feature.chroma_stft(y=y_cut, sr=sr)
+    # print(f'chroma_stft : {chroma_stft.shape}')
+    # fig = plt.figure()
+    # ax = fig.add_subplot(1, 1, 1)
+    # fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
+    # librosa.display.specshow(chroma_stft, sr=sr)
+    # fig.savefig('chroma_stft.png')
+    # plt.close(fig)
+    #
+    # spec_bw = librosa.feature.spectral_bandwidth(y=y_cut, sr=sr)
+    # print(f'spec_bw : {spec_bw.shape}')
+    #
+    # # Now the padding part
+    # image = np.array([padding(normalize(spec_bw), 1, max_size)]).reshape(1, max_size)
+    # print(f'image 1: {image.shape}')
+    # fig = plt.figure()
+    # ax = fig.add_subplot(1, 1, 1)
+    # fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
+    # librosa.display.specshow(spec_bw, sr=sr)
+    # fig.savefig('spec_bw.png')
+    # plt.close(fig)
+    #
+    # image = np.append(image, padding(normalize(spec_centroid), 1, max_size), axis=0)
+    # print(f'image 2: {image.shape}')
+    # fig = plt.figure()
+    # ax = fig.add_subplot(1, 1, 1)
+    # fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
+    # librosa.display.specshow(spec_centroid, sr=sr)
+    # fig.savefig('spec_centroid.png')
+    # plt.close(fig)
+
+    # exit(0)
+    # repeat the padded spec_bw, spec_centroid and chroma stft until they are stft and MFCC-sized
+    # for i in range(0, 9):
+    #     image = np.append(image, padding(normalize(spec_bw), 1, max_size), axis=0)
+    #     image = np.append(image, padding(normalize(spec_centroid), 1, max_size), axis=0)
+    #     image = np.append(image, padding(normalize(chroma_stft), 12, max_size), axis=0)
+    # image = np.dstack((normalize(mel1), normalize(mel2)))
+    # image = np.dstack((image, normalize(mel3)))
+    # print(image.shape)
+    # print(image)
+    # img = Image.fromarray(image, 'RGB')
+    # img.save('mel3.png')
+    # exit(0)
+    # return image
+
+
+def padding(array, xx, yy):
+    """
+    :param array: numpy array
+    :param xx: desired height
+    :param yy: desirex width
+    :return: padded array
+    """
+    h = array.shape[0]
+    w = array.shape[1]
+    a = max((xx - h) // 2, 0)
+    aa = max(0, xx - a - h)
+    b = max(0, (yy - w) // 2)
+    bb = max(yy - b - w, 0)
+
+    return np.pad(array, pad_width=((a, aa), (b, bb)), mode='constant')
