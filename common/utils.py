@@ -1,5 +1,10 @@
 import numpy as np
 import random
+import librosa.display
+from sklearn.preprocessing import normalize as sk_normalize
+
+import warnings
+warnings.filterwarnings('ignore')
 
 #Fixed seed for reproduci
 random.seed(42)
@@ -118,6 +123,7 @@ def mix(sound1, sound2, r, fs):
 
     return sound
 
+
 # Convert time representation
 def to_hms(time):
     h = int(time // 3600)
@@ -129,3 +135,46 @@ def to_hms(time):
         line = '{}m{:02d}s'.format(m, s)
 
     return line
+
+
+def mfcc_spect(y_cut, sr):
+    # my max audio file feature width
+    max_size = 256
+
+    stft = mfcc_padding(np.abs(librosa.stft(y=y_cut, n_fft=255, hop_length=512)), 128, max_size)
+    MFCCs = mfcc_padding(librosa.feature.mfcc(y=y_cut, n_mfcc=128, sr=sr), 128, max_size)
+    spec_centroid = librosa.feature.spectral_centroid(y=y_cut, sr=sr)
+    chroma_stft = librosa.feature.chroma_stft(y=y_cut, sr=sr)
+    spec_bw = librosa.feature.spectral_bandwidth(y=y_cut, sr=sr)
+
+    # Now the padding part
+    image = np.array([mfcc_padding(sk_normalize(spec_bw), 1, max_size)]).reshape(1, max_size)
+    image = np.append(image, mfcc_padding(sk_normalize(spec_centroid), 1, max_size), axis=0)
+
+    # repeat the padded spec_bw, spec_centroid and chroma stft until they are stft and MFCC-sized
+    for i in range(0, 9):
+        image = np.append(image, mfcc_padding(sk_normalize(spec_bw), 1, max_size), axis=0)
+        image = np.append(image, mfcc_padding(sk_normalize(spec_centroid), 1, max_size), axis=0)
+        image = np.append(image, mfcc_padding(sk_normalize(chroma_stft), 12, max_size), axis=0)
+
+    image = np.dstack((image, np.abs(stft)))
+    feature_spectrogram = np.dstack((image, MFCCs))
+
+    return feature_spectrogram
+
+
+def mfcc_padding(array, xx, yy):
+    """
+    :param array: numpy array
+    :param xx: desired height
+    :param yy: desirex width
+    :return: padded array
+    """
+    h = array.shape[0]
+    w = array.shape[1]
+    a = max((xx - h) // 2, 0)
+    aa = max(0, xx - a - h)
+    b = max(0, (yy - w) // 2)
+    bb = max(yy - b - w, 0)
+
+    return np.pad(array, pad_width=((a, aa), (b, bb)), mode='constant')

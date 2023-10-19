@@ -4,6 +4,7 @@ import os
 import random
 import sys
 import time
+import gc
 import matplotlib.pyplot as plt
 from datetime import datetime
 
@@ -12,6 +13,8 @@ import pandas as pd
 import torch.optim as optim
 
 import torch
+from torchvision.models import mobilenet_v3_small
+from torchsummary import summary
 import torch.nn as nn
 
 sys.path.append(os.getcwd())
@@ -48,28 +51,14 @@ class Trainer:
 
     def Train(self):
         train_start_time = time.time()
-        net = None
-        if self.opt.model_path != 'ACDNet':
-            net_path = self.opt.model_path
-            file_paths = glob.glob(net_path)
-            if len(file_paths) > 0 and os.path.isfile(file_paths[0]):
-                state = torch.load(file_paths[0], map_location=self.opt.device)
-                net = models.GetACDNetModel(channel_config=state['config']).to(self.opt.device)
-                # net = nn.DataParallel(net)
-                if self.opt.retrain:
-                    net.load_state_dict(state['weight'])
-                print('Model Loaded')
-            else:
-                print('Model has not been found')
-                exit()
-        else:
-            net = models.GetACDNetModel().to(self.opt.device)
-            # net = nn.DataParallel(net)
-            print('ACDNet model has been prepared for training')
 
-        calc.summary(net, (1, 1, opt.inputLength))
+        net = mobilenet_v3_small(num_classes=26).to(self.opt.device)
 
-        training_text = "Re-Training" if self.opt.retrain else "Training from Scratch"
+        print('mobilenet model has been prepared for training')
+
+        summary(net, (3, 224, 224))
+
+        training_text = "Training from Scratch"
         print("{} has been started. You will see update after finishing every training epoch and validation".format(
             training_text))
 
@@ -108,6 +97,12 @@ class Trainer:
 
                 running_loss += loss.item()
 
+                torch.cuda.empty_cache()
+                gc.collect()
+
+            torch.cuda.empty_cache()
+            gc.collect()
+
             tr_acc = (running_acc / n_batches) * 100
             tr_loss = running_loss / n_batches
 
@@ -116,7 +111,7 @@ class Trainer:
 
             net.eval()
             val_acc, val_loss = self.__validate(net, lossFunc)
-            # Save best model
+            # Save the best model
             self.__save_model(val_acc, epochIdx, net)
             self.__on_epoch_end(epoch_start_time, epoch_train_time, epochIdx, cur_lr, tr_loss, tr_acc, val_loss,
                                 val_acc)
@@ -125,6 +120,9 @@ class Trainer:
             metrics['{}'.format(epochIdx)]['tr_loss'] = tr_loss
             metrics['{}'.format(epochIdx)]['val_acc'] = val_acc
             metrics['{}'.format(epochIdx)]['val_loss'] = val_loss
+
+            torch.cuda.empty_cache()
+            gc.collect()
 
             running_loss = 0
             running_acc = 0
@@ -137,10 +135,20 @@ class Trainer:
 
     def load_test_data(self):
         data = np.load(os.path.join(self.opt.data, self.opt.dataset,
-                                    'test_data_{}khz/fold{}_test3900.npz'.format(self.opt.sr // 1000, self.opt.split)),
+                                    'test_data_mfcc_{}khz/fold{}_test3900.npz'.format(self.opt.sr // 1000, self.opt.split)),
                        allow_pickle=True)
-        self.testX = torch.tensor(np.moveaxis(data['x'], 3, 1)).to(self.opt.device)
-        self.testY = torch.tensor(data['y']).to(self.opt.device)
+
+        sample_count = 1000
+        random_samples = random.sample(range(0, len(data['x'])), sample_count)
+
+        data_x = data['x']
+        data_y = data['y']
+
+        data_x = data_x[random_samples]
+        data_y = data_y[random_samples]
+
+        self.testX = torch.tensor(np.moveaxis(data_x, 3, 1)).float().to(self.opt.device)
+        self.testY = torch.tensor(data_y).float().to(self.opt.device)
 
     def __get_lr(self, epoch):
         divide_epoch = np.array([self.opt.nEpochs * i for i in self.opt.schedule])
@@ -290,7 +298,7 @@ class Trainer:
                 os.remove(old_model)
             self.bestAcc = acc
             self.bestAccEpoch = epochIdx + 1
-            torch.save({'weight':net.state_dict(), 'config':net.ch_config},
+            torch.save({'weight': net.state_dict()},
                        folder_name.format(pwd, self.opt.model_name.lower(), self.opt.split))
 
 
@@ -305,30 +313,6 @@ if __name__ == '__main__':
     opt = opts.parse()
     opt.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(opt.device)
-
-    valid_training_type = False
-    while not valid_training_type:
-        train_type = input('Enter an option: \n1. Re-Training\n2. Training from Scratch\n:')
-        if train_type in ['1', '2']:
-            opt.retrain = True if train_type == '1' else False
-            valid_training_type = True
-
-    valid_path = False
-    while not valid_path:
-        model_path = input("Enter your pruned model path OR keep it blank to train the base ACDNet model\n:")
-        opt.model_path = "ACDNet" if model_path == '' else model_path
-        if model_path == '':
-            opt.model_path = "ACDNet"
-            print('ACDNet base model will be trained.')
-            valid_path = True
-
-        else:
-            file_paths = glob.glob(os.path.join(os.getcwd(), model_path))
-            if len(file_paths) > 0 and os.path.isfile(file_paths[0]):
-                state = torch.load(file_paths[0], map_location=opt.device)
-                opt.model_path = file_paths[0]
-                print('Model has been found at: {}'.format(opt.model_path))
-                valid_path = True
 
     valid_model_name = False
     while not valid_model_name:
