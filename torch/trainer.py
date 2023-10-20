@@ -62,7 +62,7 @@ class Trainer:
         print("{} has been started. You will see update after finishing every training epoch and validation".format(
             training_text))
 
-        lossFunc = torch.nn.KLDivLoss(reduction='batchmean')
+        lossFunc = torch.nn.CrossEntropyLoss()
         optimizer = optim.SGD(net.parameters(), lr=self.opt.LR, weight_decay=self.opt.weightDecay,
                               momentum=self.opt.momentum, nesterov=True)
 
@@ -77,25 +77,32 @@ class Trainer:
             optimizer.param_groups[0]['lr'] = self.__get_lr(epochIdx + 1)
             cur_lr = optimizer.param_groups[0]['lr']
             running_loss = 0.0
-            running_acc = 0.0
+            running_corrects = 0
             n_batches = math.ceil(len(self.trainGen.data) / self.opt.batchSize)
-            X, Y = self.trainGen.__get_items__(n_batches)
+            # X, Y = self.trainGen.__get_items__(n_batches)
+
+
             for batchIdx in range(n_batches):
                 # with torch.no_grad():
-                # x, y = self.trainGen.__getitem__(batchIdx)
-                x = X[batchIdx]
-                y = Y[batchIdx]
+                x, y = self.trainGen.__getitem__(batchIdx)
+                x = x.to(self.opt.device)
+                y = y.to(self.opt.device)
                 # zero the parameter gradients
                 optimizer.zero_grad()
 
                 # forward + backward + optimize
                 outputs = net(x)
-                running_acc += (((outputs.data.argmax(dim=1) == y.argmax(dim=1)) * 1).float().mean()).item()
-                loss = lossFunc(outputs.log(), y)
+                _, pred = torch.max(outputs, 1)
+                loss = lossFunc(outputs, y)
+                # running_acc += (((outputs.data.argmax(dim=1) == y.argmax(dim=1)) * 1).float().mean()).item()
+                # loss = lossFunc(outputs.log(), y)
                 loss.backward()
                 optimizer.step()
 
-                running_loss += loss.item()
+                running_loss += loss.item() * x.size(0)
+                running_corrects += (((outputs.data.argmax(dim=1) == y.argmax(dim=1)) * 1).float().mean()).item()
+
+                # running_loss += loss.item()
 
                 torch.cuda.empty_cache()
                 gc.collect()
@@ -103,13 +110,13 @@ class Trainer:
             torch.cuda.empty_cache()
             gc.collect()
 
-            tr_acc = (running_acc / n_batches) * 100
+            tr_acc = (running_corrects / n_batches) * 100
             tr_loss = running_loss / n_batches
 
             # Epoch wise validation
             epoch_train_time = time.time() - epoch_start_time
 
-            net.eval()
+            # net.eval()
             val_acc, val_loss = self.__validate(net, lossFunc)
             # Save the best model
             self.__save_model(val_acc, epochIdx, net)
@@ -138,14 +145,14 @@ class Trainer:
                                     'test_data_mfcc_{}khz/fold{}_test3900.npz'.format(self.opt.sr // 1000, self.opt.split)),
                        allow_pickle=True)
 
-        sample_count = 1000
-        random_samples = random.sample(range(0, len(data['x'])), sample_count)
+        # sample_count = 1000
+        # random_samples = random.sample(range(0, len(data['x'])), sample_count)
 
         data_x = data['x']
         data_y = data['y']
 
-        data_x = data_x[random_samples]
-        data_y = data_y[random_samples]
+        # data_x = data_x[random_samples]
+        # data_y = data_y[random_samples]
 
         self.testX = torch.tensor(np.moveaxis(data_x, 3, 1)).float().to(self.opt.device)
         self.testY = torch.tensor(data_y).float().to(self.opt.device)
@@ -195,7 +202,7 @@ class Trainer:
                     dim=1).argmax(dim=1) + 1
             acc = (((y_pred == y_target) * 1).float().mean() * 100).item()
             # valLossFunc = torch.nn.KLDivLoss();
-            loss = lossFunc(y_pred.float().log(), y_target.float()).item()
+            loss = lossFunc(y_pred.float(), y_target.float()).item()
             # loss = 0.0;
         return acc, loss
 
