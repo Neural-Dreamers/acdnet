@@ -15,6 +15,7 @@ import seaborn as sns
 from datetime import datetime
 from sklearn.preprocessing import label_binarize
 from itertools import cycle
+from torchvision.models import mobilenet_v3_small
 
 sys.path.append(os.getcwd())
 sys.path.append(os.path.join(os.getcwd(), 'common'))
@@ -30,9 +31,18 @@ class Trainer:
         self.testY = None
 
     def load_test_data(self):
-        data = np.load(os.path.join(self.opt.data, self.opt.dataset, 'final_test_data_{}khz/final_test2600.npz'.format(self.opt.sr//1000)), allow_pickle=True)
-        self.testX = torch.tensor(np.moveaxis(data['x'], 3, 1)).to(self.opt.device)
-        self.testY = torch.tensor(data['y']).to(self.opt.device)
+        data = np.load(
+            os.path.join(
+                self.opt.data,
+                self.opt.dataset,
+                'final_test_data_mfcc_{}khz/final_test2600.npz'.format(self.opt.sr//1000)
+            ), allow_pickle=True)
+
+        data_x = data['x']
+        data_y = data['y']
+
+        self.testX = torch.tensor(np.moveaxis(data_x, 3, 1)).float().to(self.opt.device)
+        self.testY = torch.tensor(data_y).float().to(self.opt.device)
 
     def __validate(self, net, lossFunc):
         if self.testX is None:
@@ -59,11 +69,14 @@ class Trainer:
         with ((torch.no_grad())):
             y_pred, y_target = self.__get_pred_actual_y(y_pred, y_target)
 
-            acc = (((y_pred == y_target) * 1).float().mean() * 100).item()
-            loss = lossFunc(y_pred.float().log(), y_target.float()).item()
-            precision = precision_score(y_target, y_pred, average='macro')
-            recall = recall_score(y_target, y_pred, average='macro')
-            f1 = f1_score(y_target, y_pred, average='macro')
+        y_pred = y_pred.cpu()
+        y_target = y_target.cpu()
+
+        acc = (((y_pred == y_target) * 1).float().mean() * 100).item()
+        loss = lossFunc(y_pred.float().log(), y_target.float()).item()
+        precision = precision_score(y_target, y_pred, average='macro')
+        recall = recall_score(y_target, y_pred, average='macro')
+        f1 = f1_score(y_target, y_pred, average='macro')
 
         return acc, loss, precision, recall, f1
 
@@ -71,12 +84,18 @@ class Trainer:
         with torch.no_grad():
             y_pred, y_target = self.__get_pred_actual_y(y_pred, y_target)
 
+        y_pred = y_pred.cpu()
+        y_target = y_target.cpu()
+
         confusion = confusion_matrix(y_target, y_pred)
         return confusion
 
     def __ROC_AUC(self, y_pred, y_target):
         with torch.no_grad():
             y_pred, y_target = self.__get_pred_actual_y(y_pred, y_target)
+
+        y_pred = y_pred.cpu()
+        y_target = y_target.cpu()
 
         # Binarize the labels
         n_classes = self.opt.nClasses
@@ -213,9 +232,8 @@ class Trainer:
         file_paths = glob.glob(net_path)
         for f in file_paths:
             state = torch.load(f, map_location=self.opt.device)
-            config = state['config']
             weight = state['weight']
-            net = models.GetACDNetModel(self.opt.inputLength, 26, self.opt.sr, config).to(self.opt.device)
+            net = mobilenet_v3_small(num_classes=26).to(self.opt.device)
             net.load_state_dict(weight)
             print('Model found at: {}'.format(f))
             # calc.summary(net, (1,1,self.opt.inputLength))
@@ -244,17 +262,5 @@ if __name__ == '__main__':
             print('Model has been found at: {}'.format(opt.model_path))
             valid_path = True
 
-    valid_fold = False
-    while not valid_fold:
-        fold = input(
-            "Select the fold on which the model was Validated:\n"
-            " 1. Fold-1\n"
-            " 2. Fold-2\n"
-            " 3. Fold-3\n"
-            " 4. Fold-4\n"
-            " 5. Fold-5\n :")
-        if fold in ['1', '2', '3', '4', '5']:
-            opt.split = int(fold)
-            valid_fold = True
     trainer = Trainer(opt)
     trainer.TestModel()

@@ -22,8 +22,6 @@ class TestGenerator:
     def get_data(self):
         # Generate one batch of data
         x, y = self.generate()
-        x = np.expand_dims(x, axis=1)
-        x = np.expand_dims(x, axis=3)
         return x, y
 
     def generate(self):
@@ -35,15 +33,16 @@ class TestGenerator:
             sound, target = self.data[i]
             sound = self.preprocess(sound).astype(np.float32)
             label = np.zeros((self.opt.nCrops, self.opt.nClasses))
-            label[:, target - 1] = 1
+            label[:, target-1] = 1
+            sound_mfcc_spects = [u.mfcc_spect(sound[i], self.opt.sr) for i in range(self.opt.nCrops)]
 
-            sounds.append(sound)
+            sounds.append(sound_mfcc_spects)
             labels.append(label)
 
         sounds = np.asarray(sounds)
         labels = np.asarray(labels)
 
-        sounds = sounds.reshape(sounds.shape[0] * sounds.shape[1], sounds.shape[2])
+        sounds = sounds.reshape(sounds.shape[0] * sounds.shape[1], sounds.shape[2], sounds.shape[3], sounds.shape[4])
         labels = labels.reshape(labels.shape[0] * labels.shape[1], labels.shape[2])
 
         return sounds, labels
@@ -72,8 +71,7 @@ if __name__ == '__main__':
         opt.sr = sr
         opt.inputLength = 66650 if sr == 44100 else 30225
         mainDir = os.getcwd()
-        final_test_data_dir = os.path.join(mainDir, 'datasets/fsc22/final_test_data_{}khz'.format(sr // 1000))
-        print(final_test_data_dir)
+        final_test_data_dir = os.path.join(mainDir, 'datasets/fsc22/final_test_data_mfcc_{}khz'.format(sr // 1000))
         if not os.path.exists(final_test_data_dir):
             os.mkdir(final_test_data_dir)
 
