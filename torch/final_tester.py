@@ -59,6 +59,9 @@ class Trainer:
         with ((torch.no_grad())):
             y_pred, y_target = self.__get_pred_actual_y(y_pred, y_target)
 
+            y_pred = y_pred.cpu()
+            y_target = y_target.cpu()
+
             acc = (((y_pred == y_target) * 1).float().mean() * 100).item()
             loss = lossFunc(y_pred.float().log(), y_target.float()).item()
             precision = precision_score(y_target, y_pred, average='macro')
@@ -71,12 +74,18 @@ class Trainer:
         with torch.no_grad():
             y_pred, y_target = self.__get_pred_actual_y(y_pred, y_target)
 
+        y_pred = y_pred.cpu()
+        y_target = y_target.cpu()
+
         confusion = confusion_matrix(y_target, y_pred)
         return confusion
 
     def __ROC_AUC(self, y_pred, y_target):
         with torch.no_grad():
             y_pred, y_target = self.__get_pred_actual_y(y_pred, y_target)
+
+        y_pred = y_pred.cpu()
+        y_target = y_target.cpu()
 
         # Binarize the labels
         n_classes = self.opt.nClasses
