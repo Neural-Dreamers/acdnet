@@ -55,11 +55,10 @@ def main():
     fsc22_master_audio_path = os.path.join(fsc22_master_path, 'audio')
 
     if not os.path.exists(fsc22_master_audio_path):
-        os.rename(os.path.join(fsc22_master_path, 'Audio Wise V1.0'),
-                  os.path.join(fsc22_master_path, 'audio'))
+        os.rename(os.path.join(fsc22_master_path, 'Audio Wise V1.0'), os.path.join(fsc22_master_path, 'audio'))
 
-    # rename audio files and split into folds
-    rename_source_files(fsc22_master_audio_path)
+        # rename audio files and split into folds
+        rename_source_files(fsc22_master_audio_path)
 
     # Convert sampling rate
     for sr in sr_list:
