@@ -34,14 +34,20 @@ class Generator(keras.utils.Sequence):
         #Generates data containing batch_size samples
         sounds = [];
         labels = [];
+        selected = []
         indexes = None;
         for i in range(self.batch_size):
             # Training phase of BC learning
             # Select two training examples
             while True:
-                sound1, label1 = self.data[random.randint(0, len(self.data) - 1)]
-                sound2, label2 = self.data[random.randint(0, len(self.data) - 1)]
-                if label1 != label2:
+                ind1 = random.randint(0, len(self.data) - 1)
+                ind2 = random.randint(0, len(self.data) - 1)
+
+                sound1, label1 = self.data[ind1]
+                sound2, label2 = self.data[ind2]
+
+                if len({label1, label2}) == 2 and "{}-{}".format(ind1, ind2) not in selected:
+                    selected.append("{}-{}".format(ind1, ind2))
                     break
             sound1 = self.preprocess(sound1)
             sound2 = self.preprocess(sound2)
@@ -50,13 +56,13 @@ class Generator(keras.utils.Sequence):
             r = np.array(random.random())
             sound = U.mix(sound1, sound2, r, self.opt.sr).astype(np.float32)
             eye = np.eye(self.opt.nClasses)
-            label = (eye[label1] * r + eye[label2] * (1 - r)).astype(np.float32)
+            label = (eye[label1 - 1] * r + eye[label2 - 1] * (1 - r)).astype(np.float32)
 
-            #For stronger augmentation
+            # For stronger augmentation
             sound = U.random_gain(6)(sound).astype(np.float32)
 
-            sounds.append(sound);
-            labels.append(label);
+            sounds.append(sound)
+            labels.append(label)
 
         sounds = np.asarray(sounds);
         labels = np.asarray(labels);

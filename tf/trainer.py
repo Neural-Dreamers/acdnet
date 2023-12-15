@@ -84,7 +84,11 @@ class CustomCallback(keras.callbacks.Callback):
 
     def load_test_data(self):
         if self.testX is None:
-            data = np.load(os.path.join(self.opt.data, self.opt.dataset, 'test_data_20khz/fold{}_test3900.npz'.format(self.opt.split)), allow_pickle=True);
+            data = np.load(os.path.join(self.opt.data, self.opt.dataset,
+                                        'test_data_{}khz/fold{}_test3900.npz'.format(self.opt.sr // 1000,
+                                                                                     self.opt.split)),
+                           allow_pickle=True)
+            # data = np.load(os.path.join(self.opt.data, self.opt.dataset, 'test_data_20khz/fold{}_test3900.npz'.format(self.opt.split)), allow_pickle=True);
             self.testX = data['x'];
             self.testY = data['y'];
 

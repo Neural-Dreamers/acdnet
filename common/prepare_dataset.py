@@ -39,10 +39,10 @@ def main():
     with zipfile.ZipFile(fsc22_path + "\\" + zip_file, "r") as zip_ref:
         zip_ref.extractall(save_location)
 
-    # Unzip the test dataset
-    zip_file = "test-archive.zip"
-    with zipfile.ZipFile(fsc22_path + "\\" + zip_file, "r") as zip_ref:
-        zip_ref.extractall(save_location)
+    # # Unzip the test dataset
+    # zip_file = "test-archive.zip"
+    # with zipfile.ZipFile(fsc22_path + "\\" + zip_file, "r") as zip_ref:
+    #     zip_ref.extractall(save_location)
 
     # Remove the zip file
     # os.remove(zip_file)
