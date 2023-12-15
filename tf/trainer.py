@@ -117,8 +117,8 @@ class CustomCallback(keras.callbacks.Callback):
         loss = keras.losses.KLD(y_target, y_pred).numpy().mean();
 
         #Get the indices that has highest average value for each sample
-        y_pred = y_pred.argmax(axis=1);
-        y_target = y_target.argmax(axis=1);
+        y_pred = y_pred.argmax(axis=1) + 1;
+        y_target = y_target.argmax(axis=1) + 1;
         accuracy = (y_pred==y_target).mean()*100;
 
         return accuracy, loss;
