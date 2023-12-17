@@ -1,14 +1,15 @@
-import sys
+import csv
 import os
+import sys
 
-import numpy as np
 import librosa
+import numpy as np
 import tensorflow as tf
 
 
 def padding(sound, size):
     diff = size - len(sound)
-    return np.pad(sound, (diff//2, diff-(diff//2)), 'constant')
+    return np.pad(sound, (diff // 2, diff - (diff // 2)), 'constant')
 
 
 def multi_crop(sound, audio_length, n_crops):
@@ -46,6 +47,7 @@ input_length = input_shape[2]
 crops = 3
 
 predictions = []
+labels = []
 
 for raw_audio_file in raw_audio_files:
     filename = os.path.join(data, raw_audio_file)
@@ -66,6 +68,29 @@ for raw_audio_file in raw_audio_files:
         # Use `tensor()` in order to get a pointer to the tensor.
         output_data = interpreter.get_tensor(output_details[0]['index'])
         pred = output_data.argmax() + 1
+        labels.append(label)
         predictions.append(pred)
 
-print(predictions)
+# Combine arrays into a list of rows
+rows = list(zip(labels, predictions))
+
+tflite_model_pred_save_dir = os.path.join(os.getcwd(), 'tf/predictions')
+
+if not os.path.exists(tflite_model_pred_save_dir):
+    os.makedirs(tflite_model_pred_save_dir)
+
+# Specify the file name
+csv_file_name = os.path.join(tflite_model_pred_save_dir, 'output.csv')
+
+# Open the CSV file in write mode
+with open(csv_file_name, 'w', newline='') as csv_file:
+    # Create a CSV writer object
+    csv_writer = csv.writer(csv_file)
+
+    # Write header row
+    csv_writer.writerow(['y', 'y_pred'])
+
+    # Write the rows to the CSV file
+    csv_writer.writerows(rows)
+
+print(f'The arrays have been successfully written to {csv_file_name}.')
