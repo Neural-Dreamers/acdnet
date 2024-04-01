@@ -31,8 +31,11 @@ class ACDNetV2(nn.Module):
 
         sfeb_pool_size = int(n_frames / (stride1 * stride2))
         # tfeb_pool_size = (2,2)
+
+        # k = 16
         if self.ch_config is None:
-            self.ch_config = [8, 64, 32, 32, 32, 48, 48, 60, 60, n_class]
+            # self.ch_config = [8, 64, 32, 32, 32, 48, 48, 60, 60, n_class]
+            self.ch_config = [8, 64, 32, 32, 48, 60, 68, n_class]
         # avg_pool_kernel_size = (1,4) if self.ch_config[1] < 64 else (2,4)
         fcn_no_of_inputs = self.ch_config[-1]
         # SFEB
@@ -43,15 +46,17 @@ class ACDNetV2(nn.Module):
         conv3, bn3 = self.make_layers(1, self.ch_config[2], k_size, padding=1)
 
         conv4, bn4 = self.make_layers(self.ch_config[2], self.ch_config[3], k_size, padding=1)
-        conv5, bn5 = self.make_layers(self.ch_config[3], self.ch_config[4], k_size, padding=1)
+        # conv5, bn5 = self.make_layers(self.ch_config[3], self.ch_config[4], k_size, padding=1)
 
-        conv6, bn6 = self.make_layers(self.ch_config[4], self.ch_config[5], k_size, padding=1)
-        conv7, bn7 = self.make_layers(self.ch_config[5], self.ch_config[6], k_size, padding=1)
+        conv6, bn6 = self.make_layers(self.ch_config[3], self.ch_config[4], k_size, padding=1)
+        # conv7, bn7 = self.make_layers(self.ch_config[5], self.ch_config[6], k_size, padding=1)
 
-        conv8, bn8 = self.make_layers(self.ch_config[6], self.ch_config[7], k_size, padding=1)
-        conv9, bn9 = self.make_layers(self.ch_config[7], self.ch_config[8], k_size, padding=1)
+        conv8, bn8 = self.make_layers(self.ch_config[4], self.ch_config[5], k_size, padding=1)
+        # conv9, bn9 = self.make_layers(self.ch_config[7], self.ch_config[8], k_size, padding=1)
 
-        conv10, bn10 = self.make_layers(self.ch_config[8], self.ch_config[9], (1, 1))
+        conv10, bn10 = self.make_layers(self.ch_config[5], self.ch_config[6], k_size, padding=1)
+
+        conv11, bn11 = self.make_layers(self.ch_config[6], self.ch_config[7], (1, 1))
 
         fcn = nn.Linear(fcn_no_of_inputs, n_class)
 
@@ -68,21 +73,23 @@ class ACDNetV2(nn.Module):
         tfeb_modules = []
 
         tfeb_modules.extend([conv3, bn3, nn.ReLU()])
+        tfeb_modules.append(nn.MaxPool2d(kernel_size=(2, 2)))
 
+        # c = 4
         tfeb_modules.extend([conv4, bn4, nn.ReLU()])
-        tfeb_modules.extend([conv5, bn5, nn.ReLU()])
         tfeb_modules.append(nn.MaxPool2d(kernel_size=(2, 2)))
 
         tfeb_modules.extend([conv6, bn6, nn.ReLU()])
-        tfeb_modules.extend([conv7, bn7, nn.ReLU()])
         tfeb_modules.append(nn.MaxPool2d(kernel_size=(2, 2)))
 
         tfeb_modules.extend([conv8, bn8, nn.ReLU()])
-        tfeb_modules.extend([conv9, bn9, nn.ReLU()])
         tfeb_modules.append(nn.MaxPool2d(kernel_size=(2, 2)))
 
-        # self.tfeb_width = int(((self.input_length / sr) * 1000) / 10)  # 10ms frames of audio length in seconds
-        # tfeb_pool_sizes = self.get_tfeb_pool_sizes(self.ch_config[1], self.tfeb_width)
+        tfeb_modules.extend([conv10, bn10, nn.ReLU()])
+        tfeb_modules.append(nn.MaxPool2d(kernel_size=(2, 2)))
+
+        self.tfeb_width = int(((self.input_length / sr) * 1000) / 10)  # 10ms frames of audio length in seconds
+        tfeb_pool_sizes = self.get_tfeb_pool_sizes(self.ch_config[1], self.tfeb_width)
         # p_index = 0
         # for i in [3, 4, 6, 8, 10]:
         #     tfeb_modules.extend([eval('conv{}'.format(i)), eval('bn{}'.format(i)), nn.ReLU()])
@@ -96,9 +103,10 @@ class ACDNetV2(nn.Module):
         #     p_index += 1
 
         tfeb_modules.append(nn.Dropout(0.2))
-        tfeb_modules.extend([conv10, bn10, nn.ReLU()])
-        # h, w = tfeb_pool_sizes[-1]
-        h, w = 8, 18
+        tfeb_modules.extend([conv11, bn11, nn.ReLU()])
+        h, w = tfeb_pool_sizes[-1]
+        # h, w = 8, 18
+        # h, w = 2, 4
         # if h > 1 or w > 1:
         tfeb_modules.append(nn.AvgPool2d(kernel_size=(h, w)))
         tfeb_modules.extend([nn.Flatten(), fcn])
@@ -106,6 +114,7 @@ class ACDNetV2(nn.Module):
         self.tfeb = nn.Sequential(*tfeb_modules)
 
         self.output = nn.Sequential(
+            # fcn,
             nn.Softmax(dim=1)
         )
 
@@ -114,6 +123,7 @@ class ACDNetV2(nn.Module):
         # swap axes
         x = x.permute((0, 2, 1, 3))
         x = self.tfeb(x)
+        # x = x.mean([2, 3])  # global average pooling
         y = self.output[0](x)
         return y
 

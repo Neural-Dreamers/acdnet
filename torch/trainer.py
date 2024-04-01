@@ -212,11 +212,10 @@ class Trainer:
 
         accuracy_matrices_path = os.path.join(os.getcwd(), 'torch\\metrics\\accuracy_matrices')
 
-        self.__save_acc_loss_plot(epochs, tr_acc, tr_loss, val_acc, val_loss, accuracy_matrices_path)
+        self.__save_acc_loss_plot(epochs, tr_acc, tr_loss, val_acc, val_loss, accuracy_matrices_path, 50)
         self.__save_acc_loss_csv(epochs, tr_acc, tr_loss, val_acc, val_loss, accuracy_matrices_path)
 
-    def __save_acc_loss_plot(self, epochs, tr_acc, tr_loss, val_acc, val_loss, save_path):
-        f = int(input('Enter save plot frequency of metrics: '))
+    def __save_acc_loss_plot(self, epochs, tr_acc, tr_loss, val_acc, val_loss, save_path, f=1):
         save_epochs = [epochs[i] for i in range(0, self.opt.nEpochs, f)] + [epochs[-1]]
         save_tr_acc = [tr_acc[i] for i in range(0, self.opt.nEpochs, f)] + [tr_acc[-1]]
         save_tr_loss = [tr_loss[i] for i in range(0, self.opt.nEpochs, f)] + [tr_loss[-1]]
