@@ -3,6 +3,8 @@ __pycache__
 *.ipynb
 *.out
 datasets/esc50
+datasets/urbansound8k
 datasets/fsc22
 env
 .idea
+venv
