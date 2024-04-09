@@ -151,7 +151,7 @@ class Trainer:
 
         # Save the plot to the specified folder
         save_path = os.path.join(confusion_matrix_path, filename)
-        plt.savefig(save_path, bbox_inches='tight')
+        plt.savefig(save_path, bbox_inches='tight', dpi=1000)
 
     def __save_ROC_AUC(self, fpr, tpr, roc_auc):
         n_classes = self.opt.nClasses
