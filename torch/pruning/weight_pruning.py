@@ -56,13 +56,13 @@ class PruningTrainer:
 
         #Load saved model dict
         dir = os.getcwd();
-        net = models.GetACDNetModel().to(self.device);
+        net = models.GetACDNetModel(nclass=self.opt.nClasses).to(self.device);
         file_paths = glob.glob(self.opt.model_path);
         if len(file_paths)>0 and os.path.isfile(file_paths[0]):
             net.load_state_dict(torch.load(file_paths[0], map_location=self.device)['weight']);
             print('Model Loaded from: {}'.format(file_paths[0]));
         else:
-            print('Model is not found at: {}'.format(net_path));
+            print('Model is not found at: {}'.format(file_paths));
             exit();
 
         calc.summary(net, (1,1,self.opt.inputLength))

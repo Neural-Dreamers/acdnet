@@ -53,7 +53,7 @@ class PruningTrainer:
 
     def PruneAndTrain(self):
         dir = os.getcwd();
-        self.net = models.GetACDNetModel().to(self.opt.device);
+        self.net = models.GetACDNetModel(nclass=self.opt.nClasses).to(self.opt.device);
         state = torch.load(self.opt.model_path, map_location=self.opt.device);
         self.net.load_state_dict(state['weight']);
         self.pruner = filter_pruning.Magnitude(self.net, self.opt) if self.opt.prune_type == 1 else filter_pruning.Taylor(self.net, self.opt);

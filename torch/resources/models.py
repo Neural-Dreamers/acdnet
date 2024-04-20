@@ -32,10 +32,11 @@ class ACDNetV2(nn.Module):
         sfeb_pool_size = int(n_frames / (stride1 * stride2))
         # tfeb_pool_size = (2,2)
 
-        # k = 16
         if self.ch_config is None:
-            # self.ch_config = [8, 64, 32, 32, 32, 48, 48, 60, 60, n_class]
-            self.ch_config = [8, 64, 32, 32, 48, 60, 68, n_class]
+            # self.ch_config = [8, 64, 32, 64, 96, 120, 136, n_class]  # k_32_c_4
+            self.ch_config = [8, 64, 32, 32, 48, 60, 68, n_class]  # k_16_c_4
+            # self.ch_config = [8, 64, 32, 32, 48, n_class]  # k_16_c_2
+
         # avg_pool_kernel_size = (1,4) if self.ch_config[1] < 64 else (2,4)
         fcn_no_of_inputs = self.ch_config[-1]
         # SFEB
@@ -105,8 +106,9 @@ class ACDNetV2(nn.Module):
         tfeb_modules.append(nn.Dropout(0.2))
         tfeb_modules.extend([conv11, bn11, nn.ReLU()])
         h, w = tfeb_pool_sizes[-1]
-        # h, w = 8, 18
-        # h, w = 2, 4
+        # h, w = 8, 18  # c_2
+        # h, w = 4, 9  # c_3
+        h, w = 2, 4  # c_4
         # if h > 1 or w > 1:
         tfeb_modules.append(nn.AvgPool2d(kernel_size=(h, w)))
         tfeb_modules.extend([nn.Flatten(), fcn])
@@ -209,8 +211,8 @@ class ACDNetQuant(nn.Module):
 
         self.sfeb = nn.Sequential(
             # Start: Filter bank
-            conv1, bn1, nn.ReLU(), \
-            conv2, bn2, nn.ReLU(), \
+            conv1, bn1, nn.ReLU(),
+            conv2, bn2, nn.ReLU(),
             nn.MaxPool2d(kernel_size=(1, sfeb_pool_size))
         )
 

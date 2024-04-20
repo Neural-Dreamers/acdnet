@@ -72,26 +72,22 @@ if __name__ == '__main__':
         opt.sr = sr
         opt.inputLength = 66650 if sr == 44100 else 30225
         mainDir = os.getcwd()
-        test_data_dir = os.path.join(mainDir, 'datasets/fsc22/test_data_{}khz'.format(sr // 1000))
+        test_data_dir = os.path.join(mainDir, 'datasets/{}/test_data_{}khz'.format(opt.dataset, sr // 1000))
         print(test_data_dir)
         if not os.path.exists(test_data_dir):
             os.mkdir(test_data_dir)
 
-        val_sounds = []
-        val_labels = []
         dataset = np.load(os.path.join(opt.data, opt.dataset, 'wav{}.npz'.format(opt.sr // 1000)), allow_pickle=True)
         for s in opt.splits:
             start_time = time.perf_counter()
             sounds = dataset['fold{}'.format(s)].item()['sounds']
             labels = dataset['fold{}'.format(s)].item()['labels']
-            val_sounds.extend(sounds)
-            val_labels.extend(labels)
 
             valGen = ValGenerator(sounds, labels, opt)
             valX, valY = valGen.get_data()
 
-            print('{}/fold{}_test3900'.format(test_data_dir, s))
-            np.savez_compressed('{}/fold{}_test3900'.format(test_data_dir, s), x=valX, y=valY)
+            print('{}/fold{}_test{}'.format(test_data_dir, s, opt.batchSize))
+            np.savez_compressed('{}/fold{}_test{}'.format(test_data_dir, s, opt.batchSize), x=valX, y=valY)
             print('split-{} test with shape x{} and y{} took {:.2f} secs'.format(s, valX.shape, valY.shape,
                                                                                  time.perf_counter() - start_time))
             sys.stdout.flush()
