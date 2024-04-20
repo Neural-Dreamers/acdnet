@@ -30,7 +30,6 @@ class ACDNetV2(nn.Module):
         n_frames = (sr / 1000) * 10  # No of frames per 10ms
 
         sfeb_pool_size = int(n_frames / (stride1 * stride2))
-        # tfeb_pool_size = (2,2)
 
         if self.ch_config is None:
             # self.ch_config = [8, 64, 32, 64, 96, 120, 136, n_class]  # k_32_c_4
@@ -91,17 +90,6 @@ class ACDNetV2(nn.Module):
 
         self.tfeb_width = int(((self.input_length / sr) * 1000) / 10)  # 10ms frames of audio length in seconds
         tfeb_pool_sizes = self.get_tfeb_pool_sizes(self.ch_config[1], self.tfeb_width)
-        # p_index = 0
-        # for i in [3, 4, 6, 8, 10]:
-        #     tfeb_modules.extend([eval('conv{}'.format(i)), eval('bn{}'.format(i)), nn.ReLU()])
-        #
-        #     if i != 3:
-        #         tfeb_modules.extend([eval('conv{}'.format(i + 1)), eval('bn{}'.format(i + 1)), nn.ReLU()])
-        #
-        #     h, w = tfeb_pool_sizes[p_index]
-        #     if h > 1 or w > 1:
-        #         tfeb_modules.append(nn.MaxPool2d(kernel_size=(h, w)))
-        #     p_index += 1
 
         tfeb_modules.append(nn.Dropout(0.2))
         tfeb_modules.extend([conv11, bn11, nn.ReLU()])
