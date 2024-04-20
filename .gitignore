@@ -6,5 +6,6 @@ datasets/esc50
 datasets/urbansound8k
 datasets/fsc22
 env
+torch-tflite
 .idea
 venv

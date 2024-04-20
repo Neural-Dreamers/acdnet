@@ -25,13 +25,14 @@ class Tester:
         y_pred = None
         y_target = self.testY
         batch_size = (batchSize // nCrops) * nCrops
+        audio_shape = input_config[0]['shape']
 
         for idx in range(math.ceil(len(self.testX) / batch_size)):
             x = self.testX[idx * batch_size: (idx + 1) * batch_size]
             scores = None
 
             for audio in x:
-                audio = audio.reshape((1, 1, inputLength, 1))
+                audio = audio.reshape(audio_shape)
                 model.set_tensor(input_config[0]['index'], audio)
                 model.invoke()
                 output_data = model.get_tensor(output_config[0]['index'])
