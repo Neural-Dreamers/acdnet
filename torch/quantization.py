@@ -69,9 +69,9 @@ class Trainer:
     def __load_model(self, quant=False):
         state = torch.load(self.opt.model_path, map_location=self.opt.device);
         if quant:
-            net = models.GetACDNetQuantModel(input_len=self.opt.inputLength, nclass=27, sr=self.opt.sr, channel_config=state['config']).to(self.opt.device);
+            net = models.GetACDNetQuantModel(input_len=self.opt.inputLength, nclass=self.opt.nClasses, sr=self.opt.sr, channel_config=state['config']).to(self.opt.device);
         else:
-            net = models.GetACDNetModel(input_len=self.opt.inputLength, nclass=27, sr=self.opt.sr, channel_config=state['config']).to(self.opt.device);
+            net = models.GetACDNetModel(input_len=self.opt.inputLength, nclass=self.opt.nClasses, sr=self.opt.sr, channel_config=state['config']).to(self.opt.device);
         net.load_state_dict(state['weight']);
         return net;
 

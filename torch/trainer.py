@@ -54,7 +54,7 @@ class Trainer:
             file_paths = glob.glob(net_path)
             if len(file_paths) > 0 and os.path.isfile(file_paths[0]):
                 state = torch.load(file_paths[0], map_location=self.opt.device)
-                net = models.GetACDNetModel(channel_config=state['config']).to(self.opt.device)
+                net = models.GetACDNetModel(nclass=self.opt.nClasses, channel_config=state['config']).to(self.opt.device)
                 # net = nn.DataParallel(net)
                 if self.opt.retrain:
                     net.load_state_dict(state['weight'])
@@ -63,7 +63,7 @@ class Trainer:
                 print('Model has not been found')
                 exit()
         else:
-            net = models.GetACDNetModel().to(self.opt.device)
+            net = models.GetACDNetModel(nclass=self.opt.nClasses).to(self.opt.device)
             # net = nn.DataParallel(net)
             print('ACDNet model has been prepared for training')
 

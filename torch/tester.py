@@ -30,7 +30,7 @@ class Trainer:
         self.testY = None
 
     def load_test_data(self):
-        data = np.load(os.path.join(self.opt.data, self.opt.dataset, 'test_data_{}khz/fold{}_test3900.npz'.format(self.opt.sr//1000, self.opt.split)), allow_pickle=True)
+        data = np.load(os.path.join(self.opt.data, self.opt.dataset, 'test_data_{}khz/fold{}_test800.npz'.format(self.opt.sr//1000, self.opt.split)), allow_pickle=True)
         self.testX = torch.tensor(np.moveaxis(data['x'], 3, 1)).to(self.opt.device)
         self.testY = torch.tensor(data['y']).to(self.opt.device)
 
@@ -224,7 +224,7 @@ class Trainer:
             state = torch.load(f, map_location=self.opt.device)
             config = state['config']
             weight = state['weight']
-            net = models.GetACDNetModel(self.opt.inputLength, 26, self.opt.sr, config).to(self.opt.device)
+            net = models.GetACDNetModel(self.opt.inputLength, nclass=self.opt.nClasses, sr=self.opt.sr, channel_config=config).to(self.opt.device)
             net.load_state_dict(weight)
             print('Model found at: {}'.format(f))
             # calc.summary(net, (1,1,self.opt.inputLength))

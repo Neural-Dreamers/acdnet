@@ -5,6 +5,7 @@ __pycache__
 datasets/esc50
 datasets/urbansound8k
 datasets/fsc22
+datasets/esc10
 env
 torch-tflite
 .idea

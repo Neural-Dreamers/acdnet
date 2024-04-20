@@ -1,0 +1,5 @@
+Accuracy: 100.000
+Loss: -0.000
+Precision: 1.000
+Recall: 1.000
+F1 Score: 1.000
