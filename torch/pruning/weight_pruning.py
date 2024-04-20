@@ -56,7 +56,7 @@ class PruningTrainer:
 
         #Load saved model dict
         dir = os.getcwd();
-        net = models.GetACDNetModel(nclass=self.opt.nClasses).to(self.device);
+        net = models.GetACDNetModel(nclass=self.opt.nClasses[self.opt.dataset]).to(self.device);
         file_paths = glob.glob(self.opt.model_path);
         if len(file_paths)>0 and os.path.isfile(file_paths[0]):
             net.load_state_dict(torch.load(file_paths[0], map_location=self.device)['weight']);
@@ -140,7 +140,9 @@ class PruningTrainer:
 
     def load_test_data(self):
         if(self.testX is None):
-            data = np.load(os.path.join(self.opt.data, self.opt.dataset, 'test_data_20khz/fold{}_test3900.npz'.format(self.opt.split)), allow_pickle=True);
+            test_samples = self.opt.nSamples[self.opt.dataset]
+            data = np.load(os.path.join(self.opt.data, self.opt.dataset, 'test_data_{}khz/fold{}_test{}.npz'.format(
+                self.opt.sr // 1000, self.opt.split, test_samples)), allow_pickle=True)
             self.testX = torch.tensor(np.moveaxis(data['x'], 3, 1)).to(self.device);
             self.testY = torch.tensor(data['y']).to(self.device).to(self.device);
 

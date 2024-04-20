@@ -34,7 +34,7 @@ class TestGenerator:
         for i in range(self.batch_size):
             sound, target = self.data[i]
             sound = self.preprocess(sound).astype(np.float32)
-            label = np.zeros((self.opt.nCrops, self.opt.nClasses))
+            label = np.zeros((self.opt.nCrops, self.opt.nClasses[self.opt.dataset]))
             label[:, target - 1] = 1
 
             sounds.append(sound)

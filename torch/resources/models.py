@@ -109,7 +109,7 @@ class ACDNetV2(nn.Module):
         # h, w = 8, 18  # c_2
         # h, w = 4, 9  # c_3
         h, w = 2, 4  # c_4
-        # if h > 1 or w > 1:
+
         tfeb_modules.append(nn.AvgPool2d(kernel_size=(h, w)))
         tfeb_modules.extend([nn.Flatten(), fcn])
 

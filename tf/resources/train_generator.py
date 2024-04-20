@@ -55,7 +55,7 @@ class Generator(keras.utils.Sequence):
             # Mix two examples
             r = np.array(random.random())
             sound = U.mix(sound1, sound2, r, self.opt.sr).astype(np.float32)
-            eye = np.eye(self.opt.nClasses)
+            eye = np.eye(self.opt.nClasses[self.opt.dataset])
             label = (eye[label1 - 1] * r + eye[label2 - 1] * (1 - r)).astype(np.float32)
 
             # For stronger augmentation

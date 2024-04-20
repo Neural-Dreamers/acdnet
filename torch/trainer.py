@@ -54,7 +54,7 @@ class Trainer:
             file_paths = glob.glob(net_path)
             if len(file_paths) > 0 and os.path.isfile(file_paths[0]):
                 state = torch.load(file_paths[0], map_location=self.opt.device)
-                net = models.GetACDNetModel(nclass=self.opt.nClasses, channel_config=state['config']).to(self.opt.device)
+                net = models.GetACDNetModel(nclass=self.opt.nClasses[self.opt.dataset], channel_config=state['config']).to(self.opt.device)
                 # net = nn.DataParallel(net)
                 if self.opt.retrain:
                     net.load_state_dict(state['weight'])
@@ -63,7 +63,7 @@ class Trainer:
                 print('Model has not been found')
                 exit()
         else:
-            net = models.GetACDNetModel(nclass=self.opt.nClasses).to(self.opt.device)
+            net = models.GetACDNetModel(nclass=self.opt.nClasses[self.opt.dataset]).to(self.opt.device)
             # net = nn.DataParallel(net)
             print('ACDNet model has been prepared for training')
 
@@ -136,9 +136,9 @@ class Trainer:
         self.__save_acc_loss(metrics)
 
     def load_test_data(self):
-        data = np.load(os.path.join(self.opt.data, self.opt.dataset,
-                                    'test_data_{}khz/fold{}_test3900.npz'.format(self.opt.sr // 1000, self.opt.split)),
-                       allow_pickle=True)
+        test_samples = self.opt.nSamples[self.opt.dataset]
+        data = np.load(os.path.join(self.opt.data, self.opt.dataset, 'test_data_{}khz/fold{}_test{}.npz'.format(
+            self.opt.sr // 1000, self.opt.split, test_samples)), allow_pickle=True)
         self.testX = torch.tensor(np.moveaxis(data['x'], 3, 1)).to(self.opt.device)
         self.testY = torch.tensor(data['y']).to(self.opt.device)
 

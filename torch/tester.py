@@ -30,7 +30,9 @@ class Trainer:
         self.testY = None
 
     def load_test_data(self):
-        data = np.load(os.path.join(self.opt.data, self.opt.dataset, 'test_data_{}khz/fold{}_test800.npz'.format(self.opt.sr//1000, self.opt.split)), allow_pickle=True)
+        test_samples = self.opt.nSamples[self.opt.dataset]
+        data = np.load(os.path.join(self.opt.data, self.opt.dataset, 'test_data_{}khz/fold{}_test{}.npz'.format(
+            self.opt.sr//1000, self.opt.split, test_samples)), allow_pickle=True)
         self.testX = torch.tensor(np.moveaxis(data['x'], 3, 1)).to(self.opt.device)
         self.testY = torch.tensor(data['y']).to(self.opt.device)
 
@@ -88,7 +90,7 @@ class Trainer:
         y_target = y_target.cpu()
 
         # Binarize the labels
-        n_classes = self.opt.nClasses
+        n_classes = self.opt.nClasses[self.opt.dataset]
         true_labels_bin = label_binarize(y_target, classes=range(1, n_classes+1))
         predicted_labels_bin = label_binarize(y_pred, classes=range(1, n_classes+1))
 
@@ -118,7 +120,7 @@ class Trainer:
         return y_pred, y_target
 
     def __save_metrics(self, acc, loss, precision, recall, f1):
-        metrics_path = os.path.join(os.getcwd(), 'torch\\metrics\\metric_values')
+        metrics_path = os.path.join(os.getcwd(), 'torch/metrics/metric_values')
         curr_datetime = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
         filename = f'{self.opt.model_name.lower()}-metrics-{format(curr_datetime)}.txt'
 
@@ -136,8 +138,8 @@ class Trainer:
     def __save_confusion_matrix(self, confusion):
         # Plot the confusion matrix
         plt.figure(figsize=(10, 10))
-        sns.heatmap(confusion, annot=True, fmt="d", cmap="Blues",
-                    xticklabels=self.opt.class_labels, yticklabels=self.opt.class_labels)
+        labels = self.opt.class_labels[self.opt.dataset]
+        sns.heatmap(confusion, annot=True, fmt="d", cmap="Blues", xticklabels=labels, yticklabels=labels)
         plt.xlabel('Predicted')
         plt.ylabel('True')
         plt.title('Confusion Matrix')
@@ -154,7 +156,8 @@ class Trainer:
         plt.savefig(save_path, bbox_inches='tight', dpi=1000)
 
     def __save_ROC_AUC(self, fpr, tpr, roc_auc):
-        n_classes = self.opt.nClasses
+        n_classes = self.opt.nClasses[self.opt.dataset]
+        labels = self.opt.class_labels[self.opt.dataset]
 
         # Plot ROC curves for each class
         plt.figure(figsize=(24, 24))
@@ -192,8 +195,7 @@ class Trainer:
         colors = cycle(hex_colors)  # Adjust as needed for your number of classes
 
         for i, color in zip(range(n_classes), colors):
-            plt.plot(fpr[i], tpr[i], color=color, lw=2,
-                     label=f'{self.opt.class_labels[i]} (AUC = {roc_auc[i]:.3f})')
+            plt.plot(fpr[i], tpr[i], color=color, lw=2, label=f'{labels[i]} (AUC = {roc_auc[i]:.3f})')
 
         plt.plot([0, 1], [0, 1], color='black', lw=2, linestyle='--')  # Diagonal line for reference
         plt.xlim([0.0, 1.0])
@@ -224,7 +226,7 @@ class Trainer:
             state = torch.load(f, map_location=self.opt.device)
             config = state['config']
             weight = state['weight']
-            net = models.GetACDNetModel(self.opt.inputLength, nclass=self.opt.nClasses, sr=self.opt.sr, channel_config=config).to(self.opt.device)
+            net = models.GetACDNetModel(self.opt.inputLength, nclass=self.opt.nClasses[self.opt.dataset], sr=self.opt.sr, channel_config=config).to(self.opt.device)
             net.load_state_dict(weight)
             print('Model found at: {}'.format(f))
             # calc.summary(net, (1,1,self.opt.inputLength))
@@ -246,7 +248,7 @@ if __name__ == '__main__':
     while not valid_path:
         model_path = input("Enter model path\n:")
         file_paths = glob.glob(os.path.join(os.getcwd(), model_path))
-        print(file_paths)
+
         if len(file_paths) > 0 and os.path.isfile(file_paths[0]):
             state = torch.load(file_paths[0], map_location=opt.device)
             opt.model_path = file_paths[0]

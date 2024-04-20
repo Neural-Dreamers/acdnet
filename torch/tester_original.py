@@ -35,7 +35,9 @@ class Trainer:
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu");
 
     def load_data(self):
-        data = np.load(os.path.join(self.opt.data, self.opt.dataset, 'test_data_44khz/fold{}_test3900.npz'.format(self.split)), allow_pickle=True);
+        test_samples = self.opt.nSamples[self.opt.dataset]
+        data = np.load(os.path.join(self.opt.data, self.opt.dataset, 'test_data_{}khz/fold{}_test{}.npz'.format(
+            self.opt.sr // 1000, self.opt.split, test_samples)), allow_pickle=True)
         self.testX = torch.tensor(np.moveaxis(data['x'], 3, 1)).to(self.device);
         self.testY = torch.tensor(data['y']).to(self.device);
         print(self.testX.shape);
@@ -85,7 +87,7 @@ class Trainer:
             state = torch.load(f, map_location=self.device);
             config = state['config'];
             weight = state['weight'];
-            net = models.GetACDNetModel(self.opt.inputLength, nclass=self.opt.nClasses, sr=self.opt.sr, channel_config=config).to(self.device);
+            net = models.GetACDNetModel(self.opt.inputLength, nclass=self.opt.nClasses[self.opt.dataset], sr=self.opt.sr, channel_config=config).to(self.device);
             net.load_state_dict(weight);
             print('Model found at: {}'.format(f));
             calc.summary(net, (1,1,self.opt.inputLength));

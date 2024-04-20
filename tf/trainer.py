@@ -24,7 +24,7 @@ class Trainer:
         self.trainGen = train_generator.setup(self.opt, self.opt.split);
 
     def Train(self):
-        model = models.GetAcdnetModel(self.opt.inputLength, 26, self.opt.sr, ch_config = self.opt.model_config);
+        model = models.GetAcdnetModel(self.opt.inputLength, n_class=self.opt.nClasses[self.opt.dataset], sr=self.opt.sr, ch_config=self.opt.model_config);
         model.summary();
 
         loss = 'kullback_leibler_divergence';
@@ -84,11 +84,9 @@ class CustomCallback(keras.callbacks.Callback):
 
     def load_test_data(self):
         if self.testX is None:
-            data = np.load(os.path.join(self.opt.data, self.opt.dataset,
-                                        'test_data_{}khz/fold{}_test3900.npz'.format(self.opt.sr // 1000,
-                                                                                     self.opt.split)),
-                           allow_pickle=True)
-            # data = np.load(os.path.join(self.opt.data, self.opt.dataset, 'test_data_20khz/fold{}_test3900.npz'.format(self.opt.split)), allow_pickle=True);
+            test_samples = self.opt.nSamples[self.opt.dataset]
+            data = np.load(os.path.join(self.opt.data, self.opt.dataset, 'test_data_{}khz/fold{}_test{}.npz'.format(
+                self.opt.sr // 1000, self.opt.split, test_samples)), allow_pickle=True)
             self.testX = data['x'];
             self.testY = data['y'];
 

@@ -8,5 +8,6 @@ datasets/fsc22
 datasets/esc10
 env
 torch-tflite
+torch/torch-tflite_convert
 .idea
 venv

@@ -38,7 +38,7 @@ net_path = opt.model_path
 state = torch.load(net_path, map_location=opt.device)
 config = state['config']
 weight = state['weight']
-net = models.GetACDNetModel(opt.inputLength, 26, opt.sr, config).to(opt.device)
+net = models.GetACDNetModel(opt.inputLength, nclass=opt.nClasses[opt.dataset], sr=opt.sr, channel_config=config).to(opt.device)
 net.load_state_dict(weight)
 
 calc.summary(net, (1, 1, opt.inputLength))
@@ -50,7 +50,7 @@ if not os.path.exists(onnx_model_dir):
 # Export the PyTorch model to ONNX format
 input_shape = (1, 1, 1, opt.inputLength)
 dummy_input = torch.randn(input_shape)
-onnx_model_path = os.path.join(onnx_model_dir, 'k_16_c_4_mixup2_fold1.onnx')
+onnx_model_path = os.path.join(onnx_model_dir, f'{opt.model_name}.onnx')
 # torch.onnx.export(net, dummy_input, onnx_model_path, verbose=False)
 
 torch.onnx.export(net, dummy_input, onnx_model_path,
@@ -64,7 +64,7 @@ if not os.path.exists(tf_model_dir):
     os.makedirs(tf_model_dir)
 
 # Convert the ONNX model to TensorFlow format
-tf_model_path = os.path.join(tf_model_dir, 'k_16_c_4_mixup2_fold1.h5')
+tf_model_path = os.path.join(tf_model_dir, f'{opt.model_name}.h5')
 
 tf_rep = onnx_tf.backend.prepare(onnx_model)
 tf_rep.export_graph(tf_model_path)
@@ -79,5 +79,5 @@ if not os.path.exists(tflite_model_dir):
     os.makedirs(tflite_model_dir)
 
 # Save the TensorFlow Lite model to a file
-with open(os.path.join(tflite_model_dir, 'k_16_c_4_mixup2_fold1.tflite'), 'wb') as f:
+with open(os.path.join(tflite_model_dir, f'{opt.model_name}.tflite'), 'wb') as f:
     f.write(tflite_model)

@@ -34,7 +34,9 @@ class Trainer:
 
     def load_test_data(self):
         if(self.testX is None):
-            data = np.load(os.path.join(self.opt.data, self.opt.dataset, 'test_data_20khz/fold{}_test3900.npz'.format(self.opt.split)), allow_pickle=True);
+            test_samples = self.opt.nSamples[self.opt.dataset]
+            data = np.load(os.path.join(self.opt.data, self.opt.dataset, 'test_data_{}khz/fold{}_test{}.npz'.format(
+                self.opt.sr // 1000, self.opt.split, test_samples)), allow_pickle=True)
             self.testX = torch.tensor(np.moveaxis(data['x'], 3, 1)).to(self.opt.device);
             self.testY = torch.tensor(data['y']).to(self.opt.device);
 
@@ -69,9 +71,9 @@ class Trainer:
     def __load_model(self, quant=False):
         state = torch.load(self.opt.model_path, map_location=self.opt.device);
         if quant:
-            net = models.GetACDNetQuantModel(input_len=self.opt.inputLength, nclass=self.opt.nClasses, sr=self.opt.sr, channel_config=state['config']).to(self.opt.device);
+            net = models.GetACDNetQuantModel(input_len=self.opt.inputLength, nclass=self.opt.nClasses[self.opt.dataset], sr=self.opt.sr, channel_config=state['config']).to(self.opt.device);
         else:
-            net = models.GetACDNetModel(input_len=self.opt.inputLength, nclass=self.opt.nClasses, sr=self.opt.sr, channel_config=state['config']).to(self.opt.device);
+            net = models.GetACDNetModel(input_len=self.opt.inputLength, nclass=self.opt.nClasses[self.opt.dataset], sr=self.opt.sr, channel_config=state['config']).to(self.opt.device);
         net.load_state_dict(state['weight']);
         return net;
 

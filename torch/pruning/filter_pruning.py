@@ -53,7 +53,7 @@ class PruningTrainer:
 
     def PruneAndTrain(self):
         dir = os.getcwd();
-        self.net = models.GetACDNetModel(nclass=self.opt.nClasses).to(self.opt.device);
+        self.net = models.GetACDNetModel(nclass=self.opt.nClasses[self.opt.dataset]).to(self.opt.device);
         state = torch.load(self.opt.model_path, map_location=self.opt.device);
         self.net.load_state_dict(state['weight']);
         self.pruner = filter_pruning.Magnitude(self.net, self.opt) if self.opt.prune_type == 1 else filter_pruning.Taylor(self.net, self.opt);
@@ -127,7 +127,9 @@ class PruningTrainer:
 
     def load_test_data(self):
         if(self.testX is None):
-            data = np.load(os.path.join(self.opt.data, self.opt.dataset, 'test_data_20khz/fold{}_test3900.npz'.format(self.opt.split)), allow_pickle=True);
+            test_samples = self.opt.nSamples[self.opt.dataset]
+            data = np.load(os.path.join(self.opt.data, self.opt.dataset, 'test_data_{}khz/fold{}_test{}.npz'.format(
+                self.opt.sr // 1000, self.opt.split, test_samples)), allow_pickle=True)
             self.testX = torch.tensor(np.moveaxis(data['x'], 3, 1)).to(self.opt.device);
             self.testY = torch.tensor(data['y']).to(self.opt.device);
 
