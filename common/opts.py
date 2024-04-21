@@ -16,7 +16,7 @@ def parse():
     opt = parser.parse_args()
 
     # Learning settings
-    opt.batchSize = 128
+    opt.batchSize = 64
     opt.weightDecay = 5e-4
     opt.momentum = 0.9
     opt.nEpochs = 2000
@@ -56,6 +56,14 @@ def parse():
             [
                 "chainsaw", "clock_tick", "crackling_fire", "crying_baby", "dog", "helicopter", "rain", "rooster",
                 "sea_waves", "sneezing"
+            ],
+        'esc50':
+            [
+                "Dog", "Rooster", "Pig", "Cow", "Frog", "Cat", "Hen", "Insects", "Sheep", "Crow",
+                "Rain", "Sea waves", "Crackling fire", "Crickets", "Chirping birds", "Water drops", "Wind", "Pouring water", "Toilet flush", "Thunderstorm",
+                "Crying baby", "Sneezing", "Clapping", "Breathing", "Coughing", "Footsteps", "Laughing", "Brushing teeth", "Snoring", "Drinking, sipping",
+                "Door knock", "Mouse click", "Keyboard typing", "Door, wood creaks", "Can opening", "Washing machine", "Vacuum cleaner", "Clock alarm", "Clock tick", "Glass breaking",
+                "Helicopter", "Chainsaw", "Siren", "Car horn", "Engine", "Train", "Church bells", "Airplane", "Fireworks", "Hand saw"
             ]
     }
 
